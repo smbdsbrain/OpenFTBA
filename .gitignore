@@ -1,0 +1,32 @@
+# Build
+.gradle/
+build/
+**/build/
+.kotlin/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local config / secrets
+local.properties
+
+# Local environment & deploy notes (machine-specific: paths, homelab IP, SMB shares)
+.memory
+
+# --- PRIVACY: never commit real activity tracks or GPS data ---
+# The user's real OpenTracks exports (KMZ/GPX) and any local copies used for
+# debugging must stay out of the repository.
+*.kmz
+*.gpx
+*.kml
+/sample-tracks/
+/test-tracks/
+/private/
+/dem/
