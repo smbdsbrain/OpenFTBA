@@ -68,8 +68,24 @@ android {
         versionName = "0.1.0"
     }
     // No INTERNET permission — privacy by default (see AndroidManifest).
+    // Release signing is configured only when the keystore env vars are present
+    // (CI injects them from repo secrets); local/debug builds are unaffected.
+    val ksFile = System.getenv("ANDROID_KEYSTORE_FILE")
+    signingConfigs {
+        if (ksFile != null) {
+            create("release") {
+                storeFile = file(ksFile)
+                storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+            }
+        }
+    }
     buildTypes {
-        getByName("release") { isMinifyEnabled = false }
+        getByName("release") {
+            isMinifyEnabled = false
+            if (ksFile != null) signingConfig = signingConfigs.getByName("release")
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

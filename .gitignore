@@ -16,6 +16,9 @@ Thumbs.db
 
 # Local config / secrets
 local.properties
+# Signing keys must never live in this repo (kept in the private infra store).
+*.jks
+*.keystore
 
 # Local Docker config, copied from the example.* files
 .env
