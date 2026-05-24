@@ -8,7 +8,7 @@ computes a rich set of cycling metrics, and shows them in a dark "instrument clu
 **No telemetry. No accounts. No cloud. No outbound network at runtime.** Your training data
 stays on your machine (or your own server).
 
-> First iteration: **cycling only**. See [ROADMAP.md](ROADMAP.md) for what's planned.
+> First iteration: **cycling only**.
 
 ## Philosophy
 
@@ -94,6 +94,21 @@ On desktop, open **Settings** and set the OpenTracks export folder. For the serv
 `OPENFTBA_WATCH_FOLDER` (see [`AGENTS.md`](AGENTS.md) for all env vars and the self-hosting
 pattern).
 
+### Self-host with Docker
+
+A multi-stage [`Dockerfile`](Dockerfile) builds everything from source, so a clone + one command
+is enough:
+
+```bash
+cp example.docker-compose.yaml docker-compose.yaml
+cp example.env .env
+# edit .env — set OPENFTBA_TRACKS to your OpenTracks export folder
+docker compose up --build -d        # web UI at http://localhost:5412
+```
+
+Your tracks are mounted **read-only**; settings persist in a named volume. See
+[`example.env`](example.env) for all options.
+
 ### Testing against real tracks (optional)
 
 Your activity tracks are never committed (`.gitignore` excludes `*.kmz`/`*.kml`/`*.gpx`). To run
@@ -112,10 +127,9 @@ folder and held in memory. Charts are hand-rolled, dependency-free Compose Canva
 
 ## Documentation
 
-- [docs/](docs/) — overview, [architecture](docs/architecture.md) (modules, data flow, wire
-  contract, storage, deployment) and [metrics & formulas](docs/metrics-and-formulas.md).
+- [docs/architecture.md](docs/architecture.md) — modules, data flow, wire contract, storage, deployment.
+- [docs/metrics-and-formulas.md](docs/metrics-and-formulas.md) — every metric and its exact formula.
 - [AGENTS.md](AGENTS.md) — working guide for contributors, incl. the self-hosting pattern.
-- [ROADMAP.md](ROADMAP.md) — what's done and what's next.
 - [CONTRIBUTING.md](CONTRIBUTING.md) — how to build, test and contribute.
 
 ## License

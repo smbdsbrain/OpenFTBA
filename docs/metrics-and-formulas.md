@@ -145,7 +145,7 @@ GitHub-style calendar heatmap of per-day distance; intensity-tier donut; distanc
 (5 km / 5 mi buckets); monthly seasonality. Per-ride detail adds time/distance-axis charts,
 HR-zone distribution, and a cadence↔speed scatter (shown only when the channel exists).
 
-## Sensor trust (Wave 5)
+## Sensor trust
 
 `AnalyzerConfig.disabledChannels` nulls a distrusted channel **before** analysis
 (`RideAnalyzer.stripDisabled`), so detection, metrics, intensity and charts all treat it as

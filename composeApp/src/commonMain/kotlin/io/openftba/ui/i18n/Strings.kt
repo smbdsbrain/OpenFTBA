@@ -2,7 +2,7 @@ package io.openftba.ui.i18n
 
 import androidx.compose.runtime.staticCompositionLocalOf
 
-/** Supported UI languages. EN + RU from the start (see ROADMAP). */
+/** Supported UI languages. EN + RU. */
 enum class Language(val code: String, val displayName: String) {
     EN("en", "English"),
     RU("ru", "Русский");

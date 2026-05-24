@@ -29,8 +29,7 @@ dependencyResolutionManagement {
     }
 }
 
-// Desktop-first vertical slice. Web (wasmJs), Android and the Ktor server module
-// are added in later waves — see ROADMAP.md.
+// shared core, the Compose UI (desktop + Android + wasmJs web), and the Ktor server.
 include(":shared")
 include(":composeApp")
 include(":server")

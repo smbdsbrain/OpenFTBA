@@ -1,8 +1,7 @@
 # AGENTS.md — OpenFTBA working guide
 
 Context and conventions for working on OpenFTBA (human or AI contributors). Read this first,
-then [docs/architecture.md](docs/architecture.md) for the module map and [ROADMAP.md](ROADMAP.md)
-for what's done and what's next.
+then [docs/architecture.md](docs/architecture.md) for the module map.
 
 ## What this is
 
