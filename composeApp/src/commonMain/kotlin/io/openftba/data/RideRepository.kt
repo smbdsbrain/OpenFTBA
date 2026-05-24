@@ -1,0 +1,48 @@
+package io.openftba.data
+
+import io.openftba.api.RideSeriesDto
+import io.openftba.model.ParsedTrack
+import io.openftba.model.Ride
+import io.openftba.settings.AppSettings
+import kotlinx.coroutines.flow.StateFlow
+
+/**
+ * Ride + its precomputed chart series (desktop builds from the track; web gets it via REST).
+ * [track] is only populated on platforms that parse locally (desktop) — used e.g. to derive
+ * which DEM tiles to download; the web client leaves it null.
+ */
+data class RideDetail(
+    val ride: Ride,
+    val series: RideSeriesDto,
+    val splits: List<io.openftba.api.SplitDto> = emptyList(),
+    val track: ParsedTrack? = null,
+)
+
+data class RepoState(
+    val rides: List<Ride> = emptyList(),
+    val settings: AppSettings = AppSettings(),
+    val loading: Boolean = false,
+    val error: String? = null,
+    /** True when this client may edit the watch/DEM folder paths (desktop/Android). On the
+     *  web they are fixed by the server/container, so the fields render read-only. */
+    val foldersEditable: Boolean = true,
+    /** Whether the server has a usable DEM folder (for the web Settings display). */
+    val demAvailable: Boolean = false,
+)
+
+/**
+ * Source of rides + settings for the UI. The desktop implementation parses the
+ * OpenTracks watch folder in-process; the web target (later) talks to the Ktor server.
+ */
+interface RideRepository {
+    val state: StateFlow<RepoState>
+    fun updateSettings(settings: AppSettings)
+    suspend fun rescan()
+    fun detail(id: String): RideDetail?
+
+    /**
+     * User-initiated download of DEM tiles covering the loaded rides into the DEM folder,
+     * then rescan. The only networked action; returns a short human-readable status.
+     */
+    suspend fun downloadDemTiles(): String = "not supported"
+}
