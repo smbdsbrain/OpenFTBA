@@ -17,6 +17,11 @@ Thumbs.db
 # Local config / secrets
 local.properties
 
+# Local Docker config, copied from the example.* files
+.env
+/docker-compose.yaml
+/docker-compose.yml
+
 # Local environment & deploy notes (machine-specific: paths, homelab IP, SMB shares)
 .memory
 

@@ -1,0 +1,30 @@
+# Example Compose file for self-hosting OpenFTBA.
+#
+#   cp example.docker-compose.yaml docker-compose.yaml
+#   cp example.env .env          # then edit .env (at least OPENFTBA_TRACKS)
+#   docker compose up --build -d
+#
+# Web UI + API will be at http://localhost:${OPENFTBA_WEB_PORT}.
+
+services:
+  openftba:
+    build: .
+    container_name: openftba
+    env_file:
+      - .env
+    ports:
+      - "${OPENFTBA_WEB_PORT:-5412}:8080"
+    volumes:
+      # Your OpenTracks export folder, mounted READ-ONLY (the same folder the
+      # OpenTracks app auto-exports .kmz files to).
+      - "${OPENFTBA_TRACKS:-./tracks}:/data/tracks:ro"
+      # Persisted settings (language, units, athlete profile) survive restarts
+      # and are shared across every device that opens this server.
+      - openftba-config:/data/config
+      # Optional: a folder of SRTM .hgt/.hgt.gz tiles for DEM elevation
+      # correction. Leave as-is if you don't use DEM (OPENFTBA_USE_DEM=false).
+      - "${OPENFTBA_DEM:-./dem}:/data/dem:ro"
+    restart: unless-stopped
+
+volumes:
+  openftba-config: {}

@@ -1,0 +1,15 @@
+# Keep the build context small and free of local/private files.
+.git
+.gradle
+.kotlin
+**/build
+.idea
+.vscode
+.claude
+.memory
+local.properties
+sample-tracks
+dem
+*.kmz
+*.kml
+*.gpx
