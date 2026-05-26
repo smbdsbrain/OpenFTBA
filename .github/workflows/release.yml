@@ -20,6 +20,10 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+          # Restores ~/.gradle/caches + ~/.gradle/wrapper, keyed by *.gradle*,
+          # gradle-wrapper.properties and libs.versions.toml. Cuts Gradle setup +
+          # dependency-resolve from minutes to seconds on warm runs.
+          cache: gradle
       - name: Build Windows app image
         shell: pwsh
         run: .\gradlew.bat --no-daemon :composeApp:createDistributable
@@ -39,6 +43,10 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+          # Restores ~/.gradle/caches + ~/.gradle/wrapper, keyed by *.gradle*,
+          # gradle-wrapper.properties and libs.versions.toml. Cuts Gradle setup +
+          # dependency-resolve from minutes to seconds on warm runs.
+          cache: gradle
       - name: Install .deb packaging deps
         run: sudo apt-get update && sudo apt-get install -y fakeroot binutils
       - name: Build Linux app image + .deb
@@ -60,6 +68,10 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+          # Restores ~/.gradle/caches + ~/.gradle/wrapper, keyed by *.gradle*,
+          # gradle-wrapper.properties and libs.versions.toml. Cuts Gradle setup +
+          # dependency-resolve from minutes to seconds on warm runs.
+          cache: gradle
       - uses: android-actions/setup-android@v3
       - name: Decode signing keystore
         env:

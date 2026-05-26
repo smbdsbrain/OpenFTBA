@@ -49,7 +49,8 @@ kotlin {
         }
         val androidMain by getting
         androidMain.dependencies {
-            implementation(compose.uiTooling)
+            // compose.uiTooling is debug-only — see the `dependencies { debugImplementation(...) }`
+            // block below. Shipping it in release pulls the @Preview/reflection runtime into the APK.
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.documentfile)
             implementation(libs.kotlinx.coroutines.core)
@@ -83,7 +84,14 @@ android {
     }
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
+            // R8 + resource shrinking. Rules in proguard-rules.pro mainly cover kotlinx.serialization
+            // (settings are persisted as JSON); Compose MP / AndroidX ship their own consumer rules.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
             if (ksFile != null) signingConfig = signingConfigs.getByName("release")
         }
     }
@@ -91,6 +99,11 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+}
+
+// @Preview / layout-inspector tooling — debug builds only, never in release.
+dependencies {
+    debugImplementation(compose.uiTooling)
 }
 
 // Forward an optional real-track folder to the desktop pipeline test:
