@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Privacy: NO android.permission.INTERNET. OpenFTBA makes no network calls.
+    <!-- Privacy: the app stays offline. The ONLY networked code path is the strictly
+         user-initiated SRTM elevation-tile download (Settings → "Download DEM tiles"), which
+         mirrors the desktop/server behaviour. INTERNET is dormant unless the user taps it.
          Track files are read from a user-granted folder via the Storage Access Framework. -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:label="OpenFTBA"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:allowBackup="true"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.NoActionBar">

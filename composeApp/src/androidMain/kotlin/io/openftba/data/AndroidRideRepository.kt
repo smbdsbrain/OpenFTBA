@@ -3,8 +3,11 @@ package io.openftba.data
 import android.content.Context
 import io.openftba.analytics.AnalyzerConfig
 import io.openftba.analytics.AthleteProfile
+import io.openftba.analytics.ElevationProvider
 import io.openftba.analytics.RideAnalyzer
 import io.openftba.api.buildRideSeries
+import io.openftba.dem.AndroidSrtmDownloader
+import io.openftba.dem.AndroidSrtmElevationProvider
 import io.openftba.model.SensorChannel
 import io.openftba.parse.AndroidOpenTracksParser
 import io.openftba.settings.AppSettings
@@ -46,10 +49,15 @@ class AndroidRideRepository(
         }
         _state.update { it.copy(loading = true, error = null) }
         val result = withContext(Dispatchers.IO) {
+            val demProvider: ElevationProvider? = settings.demFolder
+                ?.takeIf { settings.useDemElevation && it.isNotBlank() }
+                ?.let { AndroidSrtmElevationProvider(context, it) }
             val disabled = settings.disabledChannels
                 .mapNotNull { runCatching { SensorChannel.valueOf(it) }.getOrNull() }.toSet()
             val config = AnalyzerConfig(
                 ignoreElevation = settings.ignoreElevation,
+                useDem = settings.useDemElevation && demProvider != null,
+                elevationProvider = demProvider,
                 disabledChannels = disabled,
                 profile = AthleteProfile(
                     weightKg = settings.weightKg, sex = settings.sex,
@@ -72,5 +80,25 @@ class AndroidRideRepository(
         details.putAll(result)
         val rides = result.values.map { it.ride }.sortedByDescending { it.startTime }
         _state.update { it.copy(rides = rides, loading = false, error = null) }
+    }
+
+    override suspend fun downloadDemTiles(): String {
+        val settings = _state.value.settings
+        val treeUri = settings.demFolder?.takeIf { it.isNotBlank() }
+            ?: return "Set the DEM folder in settings first"
+        // Sample coordinates from loaded tracks to determine which 1° tiles are needed.
+        val coords = details.values.asSequence()
+            .flatMap { (it.track?.allPoints ?: emptyList()).asSequence() }
+            .filterIndexed { i, _ -> i % 200 == 0 } // every ~200th point is plenty for tile coverage
+            .map { it.lat to it.lon }
+            .toList()
+        if (coords.isEmpty()) return "No rides loaded to derive tiles from"
+        val tiles = AndroidSrtmDownloader.tilesFor(coords)
+        val result = withContext(Dispatchers.IO) {
+            AndroidSrtmDownloader.download(context, treeUri, tiles)
+        }
+        if (settings.useDemElevation) rescan()
+        return "DEM tiles — downloaded: ${result.downloaded.size}, present: ${result.skipped.size}" +
+            if (result.failed.isEmpty()) "" else ", failed: ${result.failed.size}"
     }
 }

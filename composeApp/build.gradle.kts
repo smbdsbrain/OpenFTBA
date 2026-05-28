@@ -65,10 +65,11 @@ android {
         applicationId = "io.openftba"
         minSdk = libs.versions.androidMinSdk.get().toInt()
         targetSdk = libs.versions.androidTargetSdk.get().toInt()
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
     }
-    // No INTERNET permission — privacy by default (see AndroidManifest).
+    // INTERNET is declared only for the user-initiated SRTM tile download (see AndroidManifest);
+    // the app is otherwise offline.
     // Release signing is configured only when the keystore env vars are present
     // (CI injects them from repo secrets); local/debug builds are unaffected.
     val ksFile = System.getenv("ANDROID_KEYSTORE_FILE")
@@ -126,7 +127,10 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Msi, TargetFormat.Deb)
             packageName = "OpenFTBA"
-            packageVersion = "0.1.0"
+            packageVersion = "0.2.0"
+            windows { iconFile.set(project.file("src/desktopMain/resources/icon.ico")) }
+            linux { iconFile.set(project.file("src/desktopMain/resources/icon.png")) }
+            macOS { iconFile.set(project.file("src/desktopMain/resources/icon.icns")) }
         }
     }
 }

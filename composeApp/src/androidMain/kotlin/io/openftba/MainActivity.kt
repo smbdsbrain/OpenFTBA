@@ -26,13 +26,30 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // SAF folder picker for SRTM elevation tiles. Needs WRITE too — downloaded tiles are saved here.
+    private val pickDemFolder = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null) {
+            runCatching {
+                contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+                )
+            }
+            repo.updateSettings(repo.state.value.settings.copy(demFolder = uri.toString()))
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AndroidShareContext.context = applicationContext
         val store = AndroidSettingsStore(applicationContext)
         repo = AndroidRideRepository(applicationContext, store)
         setContent {
-            App(repo, onPickFolder = { pickFolder.launch(null) })
+            App(
+                repo,
+                onPickFolder = { pickFolder.launch(null) },
+                onPickDemFolder = { pickDemFolder.launch(null) },
+            )
         }
         lifecycleScope.launch { repo.rescan() }
     }

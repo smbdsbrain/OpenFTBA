@@ -44,6 +44,7 @@ fun SettingsScreen(
     state: RepoState,
     onDownloadDem: suspend () -> String = { "" },
     onPickFolder: (() -> Unit)? = null,
+    onPickDemFolder: (() -> Unit)? = null,
 ) {
     val s = LocalStrings.current
     val scroll = rememberScrollState()
@@ -80,10 +81,18 @@ fun SettingsScreen(
 
         Spacer(Modifier.height(8.dp))
         SectionHeader(s.settingsDemFolder)
-        if (!state.foldersEditable) {
-            ReadOnlyPath(settings.demFolder, s.settingsServerManaged)
-        } else {
-            OutlinedTextField(
+        when {
+            !state.foldersEditable -> ReadOnlyPath(settings.demFolder, s.settingsServerManaged)
+            onPickDemFolder != null -> {
+                // Android: choose the folder via the system picker (SAF), not a typed path.
+                Button(onClick = onPickDemFolder) { Text(s.settingsDemFolder) }
+                Text(
+                    settings.demFolder ?: s.settingsDemFolderHint,
+                    style = MaterialTheme.typography.labelSmall, color = Palette.OnMuted,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
+            else -> OutlinedTextField(
                 value = settings.demFolder.orEmpty(),
                 onValueChange = { onChange(settings.copy(demFolder = it.ifBlank { null })) },
                 modifier = Modifier.fillMaxWidth(),

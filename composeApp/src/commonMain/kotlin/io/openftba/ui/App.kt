@@ -38,7 +38,7 @@ import io.openftba.ui.theme.Palette
 private enum class Tab { OVERVIEW, RIDES, SETTINGS }
 
 @Composable
-fun App(repo: RideRepository, onPickFolder: (() -> Unit)? = null) {
+fun App(repo: RideRepository, onPickFolder: (() -> Unit)? = null, onPickDemFolder: (() -> Unit)? = null) {
     val state by repo.state.collectAsState()
     val strings = stringsFor(Language.fromCode(state.settings.languageCode))
 
@@ -105,6 +105,7 @@ fun App(repo: RideRepository, onPickFolder: (() -> Unit)? = null) {
                                 state = state,
                                 onDownloadDem = { repo.downloadDemTiles() },
                                 onPickFolder = onPickFolder,
+                                onPickDemFolder = onPickDemFolder,
                             )
                         }
                     }

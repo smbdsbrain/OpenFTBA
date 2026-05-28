@@ -1,6 +1,7 @@
 package io.openftba
 
 import androidx.compose.runtime.remember
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
@@ -16,6 +17,7 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         state = windowState,
         title = "OpenFTBA",
+        icon = painterResource("icon.png"),
     ) {
         // App triggers an initial rescan via LaunchedEffect when a folder is configured.
         App(repo)
