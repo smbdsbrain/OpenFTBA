@@ -38,8 +38,12 @@ distance (segments are pause-separated).
 ## Elevation
 
 Source is chosen with graceful fallback (`RideAnalyzer.buildElevationSeries`):
-**DEM** (if enabled and it covers ≥50% of the route) → **smoothed GPS** → **none**
-(if elevation is absent or `ignoreElevation`/disabled).
+**DEM** (if enabled and it covers ≥50% of the route) → **smoothed GPS** → **none**.
+DEM is tried first and is independent of the track's altitude, so **"Ignore GPS elevation"**
+(`ignoreElevation`) only drops the smoothed-GPS fallback — it does **not** suppress DEM. The
+result is **none** when the track elevation is absent, distrusted, or `ignoreElevation` is set and
+no usable DEM is available. Distrusting the ELEVATION sensor channel is the stronger switch: it
+strips the channel entirely and also turns DEM off.
 
 - **Smoothing**: moving average over `elevationSmoothingWindow` (7 points) of the elevation
   series; nulls are forward-filled. DEM series uses a light window of 3.

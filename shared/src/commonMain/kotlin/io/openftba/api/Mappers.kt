@@ -1,7 +1,9 @@
 package io.openftba.api
 
+import io.openftba.analytics.AnalyzerConfig
 import io.openftba.analytics.Geo
 import io.openftba.analytics.IntensitySource
+import io.openftba.analytics.RideAnalyzer
 import io.openftba.model.AvailableChannels
 import io.openftba.model.ElevationSource
 import io.openftba.model.GeoPoint
@@ -96,10 +98,21 @@ private const val STOP_DETECT_SECONDS = 5.0     // candidate stop must last at l
 private const val PAUSE_MERGE_METERS = 150.0    // merge stops separated by less travel than this
 private const val STOP_DISPLAY_SECONDS = 30.0   // only annotate merged stops at least this long
 
-/** Build downsampled per-channel chart series from a parsed track (pure, portable). */
-fun buildRideSeries(track: ParsedTrack): RideSeriesDto {
+/**
+ * Build downsampled per-channel chart series from a parsed track (pure, portable).
+ *
+ * When [config] is supplied, the elevation channel is plotted from the analyzer's chosen
+ * source (DEM when active, else smoothed GPS) via [RideAnalyzer.chartElevationSeries], so the
+ * chart matches the ride-list ascent — once we switch to DEM the noisy GPS altitude is ignored
+ * everywhere. Falls back to the raw track elevation only when no series is available.
+ */
+fun buildRideSeries(track: ParsedTrack, config: AnalyzerConfig? = null): RideSeriesDto {
     val points = track.allPoints
     if (points.isEmpty()) return RideSeriesDto()
+    // Analyzer-chosen elevation (DEM / smoothed GPS), aligned 1:1 with `points`. Use it when it
+    // covers the whole track; otherwise keep the raw per-point elevation below.
+    val analyzedEle = config?.let { RideAnalyzer.chartElevationSeries(track, it).first }
+        ?.takeIf { it.size == points.size }
     val start = points.first().time
     val time = ArrayList<Double>(points.size)
     val dist = ArrayList<Double>(points.size)
@@ -140,7 +153,7 @@ fun buildRideSeries(track: ParsedTrack): RideSeriesDto {
         dist.add(cum / 1000.0)
         val v = p.speed ?: if (i > 0 && dt > 0) Geo.distance(points[i - 1], p) / dt else 0.0
         speed.add(v * 3.6)
-        ele.add(p.ele ?: 0.0)
+        ele.add(analyzedEle?.get(i) ?: p.ele ?: 0.0)
         hr.add(p.heartRate ?: 0.0)
         cad.add(p.cadence ?: 0.0)
         pwr.add(p.power ?: 0.0)

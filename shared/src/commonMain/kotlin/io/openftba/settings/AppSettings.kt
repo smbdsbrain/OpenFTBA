@@ -11,6 +11,7 @@ enum class Sex { MALE, FEMALE, UNSPECIFIED }
 data class AppSettings(
     val watchFolder: String? = null,
     val demFolder: String? = null,
+    /** Ignore the track's GPS/baro elevation. DEM correction (when enabled) still applies. */
     val ignoreElevation: Boolean = false,
     val useDemElevation: Boolean = false,
     /** Sensor channels the user distrusts (names of SensorChannel), treated as absent. */
