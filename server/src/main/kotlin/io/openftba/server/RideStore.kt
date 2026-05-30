@@ -62,7 +62,7 @@ class RideStore(
                 val splits = ride.metrics.splits.map {
                     SplitDto(it.index, it.distanceMeters, it.durationSeconds, it.avgSpeed, it.elevationGain, it.avgHeartRate)
                 }
-                details[ride.id] = RideDetailDto(ride.toSummaryDto(), buildRideSeries(track), splits)
+                details[ride.id] = RideDetailDto(ride.toSummaryDto(), buildRideSeries(track, config), splits)
             }.onFailure { System.err.println("[store] failed ${file.name}: ${it.message}") }
         }
         val summaries = details.values.map { it.summary }.sortedByDescending { it.startEpochMs }

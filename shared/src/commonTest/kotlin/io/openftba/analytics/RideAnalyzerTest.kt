@@ -69,6 +69,31 @@ class RideAnalyzerTest {
     }
 
     @Test
+    fun ignoreGpsElevation_stillUsesDemButDropsGpsFallback() {
+        // Noisy GPS climb; DEM reports flat terrain at 100 m.
+        val pts = (0 until 6).map { i ->
+            GeoPoint(t(i.toLong()), 60.0 + i * 0.001, 30.0, ele = 10.0 + i * 5)
+        }
+        val track = ParsedTrack("id", "r", "biking", listOf(TrackSegment(pts)), "r.kmz")
+        val flatDem = object : ElevationProvider {
+            override fun elevationAt(lat: Double, lon: Double) = 100.0
+        }
+
+        // "Ignore GPS elevation" must NOT suppress DEM: DEM is independent of the GPS altitude.
+        val withDem = RideAnalyzer.analyze(
+            track,
+            AnalyzerConfig(ignoreElevation = true, useDem = true, elevationProvider = flatDem),
+        )!!
+        assertEquals(io.openftba.model.ElevationSource.DEM, withDem.metrics.elevationSource)
+        assertEquals(0.0, withDem.metrics.elevationGain, 0.001) // flat DEM → no gain
+
+        // Without a usable DEM, ignoring GPS elevation drops it entirely.
+        val noDem = RideAnalyzer.analyze(track, AnalyzerConfig(ignoreElevation = true))!!
+        assertEquals(io.openftba.model.ElevationSource.IGNORED, noDem.metrics.elevationSource)
+        assertEquals(0.0, noDem.metrics.elevationGain, 0.001)
+    }
+
+    @Test
     fun analyze_computesDistanceAndLongestNonStop() {
         // Two segments along a meridian (constant lon), so distance grows with lat.
         fun seg(startSec: Long, latStart: Double, n: Int): TrackSegment {

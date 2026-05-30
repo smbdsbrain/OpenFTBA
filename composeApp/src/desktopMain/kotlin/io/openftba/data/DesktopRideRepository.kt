@@ -84,7 +84,7 @@ class DesktopRideRepository(
                         io.openftba.api.SplitDto(it.index, it.distanceMeters, it.durationSeconds, it.avgSpeed, it.elevationGain, it.avgHeartRate)
                     }
                     // Dedup: trackid wins; fall back to file name.
-                    byId[ride.id] = RideDetail(ride, io.openftba.api.buildRideSeries(track), splits, track)
+                    byId[ride.id] = RideDetail(ride, io.openftba.api.buildRideSeries(track, config), splits, track)
                 }
             }
             byId

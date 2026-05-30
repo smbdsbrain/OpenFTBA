@@ -71,7 +71,7 @@ class AndroidRideRepository(
                     val splits = ride.metrics.splits.map {
                         io.openftba.api.SplitDto(it.index, it.distanceMeters, it.durationSeconds, it.avgSpeed, it.elevationGain, it.avgHeartRate)
                     }
-                    byId[ride.id] = RideDetail(ride, buildRideSeries(track), splits, track)
+                    byId[ride.id] = RideDetail(ride, buildRideSeries(track, config), splits, track)
                 }
             }
             byId

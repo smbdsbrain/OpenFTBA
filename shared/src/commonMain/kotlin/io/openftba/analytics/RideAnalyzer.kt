@@ -31,7 +31,11 @@ data class AnalyzerConfig(
     val maxPlausibleSpeed: Double = 30.0,
     /** Split length in meters (1 km by default). */
     val splitMeters: Double = 1000.0,
-    /** Ignore elevation entirely (user setting). */
+    /**
+     * Ignore the track's own (GPS/baro) elevation (user setting). DEM correction, when enabled and
+     * covering the route, still applies — this only suppresses the GPS fallback. Distrusting the
+     * ELEVATION sensor channel ([disabledChannels]) is the stronger switch that also turns DEM off.
+     */
     val ignoreElevation: Boolean = false,
     /** Athlete profile for intensity (TRIMP/TSS) and tiers. */
     val profile: AthleteProfile = AthleteProfile(),
@@ -55,16 +59,8 @@ object RideAnalyzer {
     fun analyze(track: ParsedTrack, config: AnalyzerConfig = AnalyzerConfig()): Ride? {
         if (track.allPoints.size < 2) return null
 
-        // Wave 5: drop distrusted sensor channels up front so everything downstream
-        // (detection, metrics, intensity, charts) sees them as absent.
-        val disabled = config.disabledChannels
-        val segments = if (disabled.isEmpty()) track.segments
-        else track.segments.map { seg -> TrackSegment(seg.points.map { stripDisabled(it, disabled) }) }
+        val (segments, effectiveConfig) = prepare(track, config)
         val points = segments.flatMap { it.points }
-
-        val effectiveConfig =
-            if (SensorChannel.ELEVATION in disabled) config.copy(ignoreElevation = true, useDem = false)
-            else config
 
         val channels = detectChannels(points)
         val metrics = computeMetrics(segments, channels, effectiveConfig)
@@ -82,6 +78,35 @@ object RideAnalyzer {
             channels = channels,
             metrics = metrics,
         )
+    }
+
+    /**
+     * Shared front-end for [analyze] and [chartElevationSeries]: drop distrusted sensor channels
+     * (Wave 5) so everything downstream sees them as absent, and derive the effective config —
+     * disabling ELEVATION also forces elevation off (ignore + no DEM). Returns the (possibly
+     * stripped) segments and the effective config.
+     */
+    private fun prepare(track: ParsedTrack, config: AnalyzerConfig): Pair<List<TrackSegment>, AnalyzerConfig> {
+        val disabled = config.disabledChannels
+        val segments = if (disabled.isEmpty()) track.segments
+        else track.segments.map { seg -> TrackSegment(seg.points.map { stripDisabled(it, disabled) }) }
+        val effectiveConfig =
+            if (SensorChannel.ELEVATION in disabled) config.copy(ignoreElevation = true, useDem = false)
+            else config
+        return segments to effectiveConfig
+    }
+
+    /**
+     * Per-point elevation series the charts should plot, using the **same** source selection and
+     * fallback as the metrics ([buildElevationSeries]: DEM → smoothed GPS → none) so the chart and
+     * the ride-list ascent never disagree. The series is aligned to [ParsedTrack.allPoints] and is
+     * empty when elevation is ignored/absent.
+     */
+    fun chartElevationSeries(track: ParsedTrack, config: AnalyzerConfig): Pair<List<Double>, ElevationSource> {
+        val (segments, effectiveConfig) = prepare(track, config)
+        val flat = segments.flatMap { it.points }
+        val channels = detectChannels(flat)
+        return buildElevationSeries(flat, channels, effectiveConfig)
     }
 
     private fun stripDisabled(p: GeoPoint, disabled: Set<SensorChannel>): GeoPoint = p.copy(
@@ -252,13 +277,17 @@ object RideAnalyzer {
     /**
      * Pick the elevation series for the whole ride from the configured source, with
      * graceful fallback: DEM (if enabled and it covers the route) → smoothed GPS → none.
+     *
+     * DEM is tried first because it is independent of the track's own (GPS/baro) altitude, so
+     * [AnalyzerConfig.ignoreElevation] ("ignore GPS elevation") must not suppress it — it only
+     * drops the GPS fallback used when no usable DEM is available.
      */
     internal fun buildElevationSeries(
         flat: List<GeoPoint>,
         channels: AvailableChannels,
         config: AnalyzerConfig,
     ): Pair<List<Double>, ElevationSource> {
-        if (config.ignoreElevation || flat.isEmpty()) return emptyList<Double>() to ElevationSource.IGNORED
+        if (flat.isEmpty()) return emptyList<Double>() to ElevationSource.IGNORED
 
         val provider = config.elevationProvider
         if (config.useDem && provider != null) {
@@ -269,7 +298,9 @@ object RideAnalyzer {
                 return smooth(raw, 3) to ElevationSource.DEM
             }
         }
-        if (!channels.elevation) return emptyList<Double>() to ElevationSource.IGNORED
+        // No usable DEM: the track's own elevation is the only source left. Drop it when the user
+        // ignores GPS elevation or the channel is absent/distrusted.
+        if (config.ignoreElevation || !channels.elevation) return emptyList<Double>() to ElevationSource.IGNORED
         return smooth(flat.map { it.ele }, config.elevationSmoothingWindow) to ElevationSource.SMOOTHED_GPS
     }
 
