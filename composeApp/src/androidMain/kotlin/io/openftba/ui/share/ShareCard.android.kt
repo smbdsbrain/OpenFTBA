@@ -85,7 +85,13 @@ private fun renderCard(spec: ShareSpec): Bitmap {
         text(tier, bx + 180f, by + 60f, 44f, tierColor, bold = true, center = true)
     }
 
-    if (spec.spark.size >= 2) drawSpark(c, p, spec.spark, accent, pad, 430f, s - pad * 2, 200f)
+    // Art band: 3D track silhouette when available, speed sparkline as the fallback.
+    val art = spec.trackArt
+    if (art != null && art.xs.size >= 2) {
+        drawTrackArt(c, p, art, pad, 415f, s - pad * 2, 230f)
+    } else if (spec.spark.size >= 2) {
+        drawSpark(c, p, spec.spark, accent, pad, 430f, s - pad * 2, 200f)
+    }
 
     val gx = pad; val gy = 700f; val colW = (s - pad * 2) / 2
     spec.stats.forEachIndexed { i, st ->
@@ -96,6 +102,37 @@ private fun renderCard(spec: ShareSpec): Bitmap {
     }
     text("local-only cycling analytics · no tracking", pad, s - 56f, 26f, Color.parseColor("#5A6372"))
     return bmp
+}
+
+/** Geometry and colors are fully precomputed (normalized 0..1) — just scale and stroke. */
+private fun drawTrackArt(c: Canvas, p: Paint, art: ShareTrackArt, x: Float, y: Float, w: Float, h: Float) {
+    fun px(v: Double) = x + (v * w).toFloat()
+    fun py(v: Double) = y + (v * h).toFloat()
+    p.style = Paint.Style.STROKE
+    p.strokeCap = Paint.Cap.ROUND
+
+    p.strokeWidth = 1f
+    p.color = art.gridArgb
+    for (i in 0 until art.grid.size / 4) {
+        c.drawLine(px(art.grid[i * 4]), py(art.grid[i * 4 + 1]), px(art.grid[i * 4 + 2]), py(art.grid[i * 4 + 3]), p)
+    }
+    p.strokeWidth = 3f
+    for (i in 0 until art.shadowXs.size - 1) {
+        p.color = art.shadowColors[i]
+        c.drawLine(px(art.shadowXs[i]), py(art.shadowYs[i]), px(art.shadowXs[i + 1]), py(art.shadowYs[i + 1]), p)
+    }
+    p.strokeWidth = 1.5f
+    for (i in art.dropColors.indices) {
+        p.color = art.dropColors[i]
+        c.drawLine(px(art.drops[i * 4]), py(art.drops[i * 4 + 1]), px(art.drops[i * 4 + 2]), py(art.drops[i * 4 + 3]), p)
+    }
+    p.strokeWidth = 4f
+    for (i in 0 until art.xs.size - 1) {
+        p.color = art.colors[i]
+        c.drawLine(px(art.xs[i]), py(art.ys[i]), px(art.xs[i + 1]), py(art.ys[i + 1]), p)
+    }
+    p.style = Paint.Style.FILL
+    p.strokeCap = Paint.Cap.BUTT
 }
 
 private fun drawSpark(c: Canvas, p: Paint, values: List<Double>, color: Int, x: Float, y: Float, w: Float, h: Float) {

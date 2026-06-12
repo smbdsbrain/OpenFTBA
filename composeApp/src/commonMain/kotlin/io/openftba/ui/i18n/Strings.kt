@@ -64,6 +64,8 @@ interface Strings {
     val chartHeartRate: String
     val chartCadence: String
     val chartPower: String
+    val track3d: String
+    val track3dHint: String
 
     // Settings
     val settingsWatchFolder: String
@@ -188,6 +190,8 @@ object EnStrings : Strings {
     override val chartHeartRate = "Heart rate"
     override val chartCadence = "Cadence"
     override val chartPower = "Power"
+    override val track3d = "3D track"
+    override val track3dHint = "drag to rotate · scroll or pinch to zoom"
     override val settingsWatchFolder = "OpenTracks export folder"
     override val settingsWatchFolderHint = "Folder where OpenTracks auto-exports tracks (.kmz)."
     override val settingsServerManaged = "Configured on the server (read-only here)."
@@ -328,6 +332,8 @@ object RuStrings : Strings {
     override val chartHeartRate = "Пульс"
     override val chartCadence = "Каденс"
     override val chartPower = "Мощность"
+    override val track3d = "3D-трек"
+    override val track3dHint = "перетащите — вращение · колесо или щипок — зум"
     override val settingsWatchFolder = "Папка экспорта OpenTracks"
     override val settingsWatchFolderHint = "Папка, куда OpenTracks авто-экспортирует треки (.kmz)."
     override val settingsServerManaged = "Задаётся на сервере (здесь только для просмотра)."

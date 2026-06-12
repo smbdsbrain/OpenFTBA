@@ -224,7 +224,7 @@ private fun DrawScope.drawMarker(m: TextMeasurer, x: Float, y: Float, color: Col
     drawText(r, topLeft = Offset((x - r.size.width / 2f).coerceIn(loX, hiX - r.size.width), y - r.size.height - 6f))
 }
 
-private fun nearestIndex(xs: List<Double>, x: Double): Int {
+internal fun nearestIndex(xs: List<Double>, x: Double): Int {
     var best = 0; var bestD = Double.MAX_VALUE
     for (i in xs.indices) { val d = abs(xs[i] - x); if (d < bestD) { bestD = d; best = i } }
     return best

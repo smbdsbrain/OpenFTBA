@@ -46,8 +46,12 @@ function ftbaBuildCard(spec) {
         ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
     }
 
+    // Art band: 3D track silhouette when available, speed sparkline as the fallback.
+    const art = spec.trackArt;
     const spark = spec.spark || [];
-    if (spark.length >= 2) {
+    if (art && art.xs && art.xs.length >= 2) {
+        ftbaDrawTrackArt(ctx, art, pad, 415, S - pad * 2, 230);
+    } else if (spark.length >= 2) {
         let mn = Infinity, mx = -Infinity;
         for (const v of spark) { if (v < mn) mn = v; if (v > mx) mx = v; }
         const span = (mx - mn) || 1, x = pad, y = 430, w = S - pad * 2, h = 200;
@@ -71,6 +75,35 @@ function ftbaBuildCard(spec) {
     ctx.font = "400 26px sans-serif"; ctx.fillStyle = "#5A6372";
     ctx.fillText("local-only cycling analytics · no tracking", pad, S - 56);
     return c;
+}
+
+// Geometry and colors arrive fully precomputed (normalized 0..1) — just scale and stroke.
+function ftbaDrawTrackArt(ctx, art, x, y, w, h) {
+    const px = v => x + v * w, py = v => y + v * h;
+    const seg = (x0, y0, x1, y1) => {
+        ctx.beginPath(); ctx.moveTo(px(x0), py(y0)); ctx.lineTo(px(x1), py(y1)); ctx.stroke();
+    };
+    ctx.lineCap = "round";
+    const grid = art.grid || [];
+    ctx.strokeStyle = art.gridColor || "rgba(42,47,56,0.55)"; ctx.lineWidth = 1;
+    for (let i = 0; i + 3 < grid.length; i += 4) seg(grid[i], grid[i + 1], grid[i + 2], grid[i + 3]);
+    ctx.lineWidth = 3;
+    for (let i = 0; i < art.shadowXs.length - 1; i++) {
+        ctx.strokeStyle = art.shadowColors[i];
+        seg(art.shadowXs[i], art.shadowYs[i], art.shadowXs[i + 1], art.shadowYs[i + 1]);
+    }
+    const drops = art.drops || [], dropColors = art.dropColors || [];
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i < dropColors.length; i++) {
+        ctx.strokeStyle = dropColors[i];
+        seg(drops[i * 4], drops[i * 4 + 1], drops[i * 4 + 2], drops[i * 4 + 3]);
+    }
+    ctx.lineWidth = 4;
+    for (let i = 0; i < art.xs.length - 1; i++) {
+        ctx.strokeStyle = art.colors[i];
+        seg(art.xs[i], art.ys[i], art.xs[i + 1], art.ys[i + 1]);
+    }
+    ctx.lineCap = "butt";
 }
 
 function ftbaRound(ctx, x, y, w, h, r) {

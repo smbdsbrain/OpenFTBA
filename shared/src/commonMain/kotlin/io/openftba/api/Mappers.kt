@@ -121,6 +121,8 @@ fun buildRideSeries(track: ParsedTrack, config: AnalyzerConfig? = null): RideSer
     val hr = ArrayList<Double>(points.size)
     val cad = ArrayList<Double>(points.size)
     val pwr = ArrayList<Double>(points.size)
+    val latL = ArrayList<Double>(points.size)
+    val lonL = ArrayList<Double>(points.size)
 
     // Flattened index at which each segment (after the first) begins → recorded pauses.
     val segmentStarts = HashSet<Int>()
@@ -157,6 +159,8 @@ fun buildRideSeries(track: ParsedTrack, config: AnalyzerConfig? = null): RideSer
         hr.add(p.heartRate ?: 0.0)
         cad.add(p.cadence ?: 0.0)
         pwr.add(p.power ?: 0.0)
+        latL.add(p.lat)
+        lonL.add(p.lon)
 
         if (i in segmentStarts) {
             // Recorded segment boundary: close any open within-segment stop, then mark the gap.
@@ -176,6 +180,7 @@ fun buildRideSeries(track: ParsedTrack, config: AnalyzerConfig? = null): RideSer
     return RideSeriesDto(
         distanceKm = down(dist), timeMin = down(time), speedKmh = down(speed),
         elevation = down(ele), heartRate = down(hr), cadence = down(cad), power = down(pwr),
+        lat = down(latL), lon = down(lonL),
         pauses = mergePauses(pauses),
     )
 }
