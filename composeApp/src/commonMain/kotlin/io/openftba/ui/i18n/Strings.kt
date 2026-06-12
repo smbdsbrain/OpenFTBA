@@ -56,6 +56,10 @@ interface Strings {
     val back: String
     val loadingRide: String
     val rideNotFound: String
+    /** Three-letter month labels, Jan..Dec, for the calendar heatmap. */
+    val monthsShort: List<String>
+    /** Short weekday labels, Mon..Sun (Monday-first, matching the heatmap rows). */
+    val weekdaysShort: List<String>
 
     // Ride detail
     val rideSummary: String
@@ -188,6 +192,8 @@ object EnStrings : Strings {
     override val back = "Back"
     override val loadingRide = "Loading ride…"
     override val rideNotFound = "Ride not found"
+    override val monthsShort = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+    override val weekdaysShort = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
     override val rideSummary = "Summary"
     override val splits = "Splits"
     override val axisTime = "Time"
@@ -334,6 +340,8 @@ object RuStrings : Strings {
     override val back = "Назад"
     override val loadingRide = "Загрузка тренировки…"
     override val rideNotFound = "Тренировка не найдена"
+    override val monthsShort = listOf("Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек")
+    override val weekdaysShort = listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс")
     override val rideSummary = "Сводка"
     override val splits = "Сплиты"
     override val axisTime = "Время"
