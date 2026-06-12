@@ -67,8 +67,11 @@ actual fun exportShareCard(spec: ShareSpec): String {
         g.drawString(spec.tierLabel, bx + 180 - tw / 2, by + 60)
     }
 
-    // Sparkline band
-    if (spec.spark.size >= 2) {
+    // Art band: 3D track silhouette when available, speed sparkline as the fallback.
+    val art = spec.trackArt
+    if (art != null && art.xs.size >= 2) {
+        drawTrackArt(g, art, pad, 415, s - pad * 2, 230)
+    } else if (spec.spark.size >= 2) {
         drawSpark(g, spec.spark, accent, pad, 430, s - pad * 2, 200)
     }
 
@@ -100,6 +103,34 @@ actual fun exportShareCard(spec: ShareSpec): String {
             .setContents(StringSelection(spec.shareText), null)
     }
     return "Saved ${out.name} · text copied"
+}
+
+/** Geometry and colors are fully precomputed (normalized 0..1) — just scale and stroke. */
+private fun drawTrackArt(g: java.awt.Graphics2D, art: ShareTrackArt, x: Int, y: Int, w: Int, h: Int) {
+    fun px(v: Double) = (x + v * w).toFloat()
+    fun py(v: Double) = (y + v * h).toFloat()
+    fun seg(x0: Float, y0: Float, x1: Float, y1: Float) = g.draw(java.awt.geom.Line2D.Float(x0, y0, x1, y1))
+
+    g.color = Color(art.gridArgb, true)
+    g.stroke = java.awt.BasicStroke(1f)
+    for (i in 0 until art.grid.size / 4) {
+        seg(px(art.grid[i * 4]), py(art.grid[i * 4 + 1]), px(art.grid[i * 4 + 2]), py(art.grid[i * 4 + 3]))
+    }
+    g.stroke = java.awt.BasicStroke(3f, java.awt.BasicStroke.CAP_ROUND, java.awt.BasicStroke.JOIN_ROUND)
+    for (i in 0 until art.shadowXs.size - 1) {
+        g.color = Color(art.shadowColors[i], true)
+        seg(px(art.shadowXs[i]), py(art.shadowYs[i]), px(art.shadowXs[i + 1]), py(art.shadowYs[i + 1]))
+    }
+    g.stroke = java.awt.BasicStroke(1.5f)
+    for (i in art.dropColors.indices) {
+        g.color = Color(art.dropColors[i], true)
+        seg(px(art.drops[i * 4]), py(art.drops[i * 4 + 1]), px(art.drops[i * 4 + 2]), py(art.drops[i * 4 + 3]))
+    }
+    g.stroke = java.awt.BasicStroke(4f, java.awt.BasicStroke.CAP_ROUND, java.awt.BasicStroke.JOIN_ROUND)
+    for (i in 0 until art.xs.size - 1) {
+        g.color = Color(art.colors[i], true)
+        seg(px(art.xs[i]), py(art.ys[i]), px(art.xs[i + 1]), py(art.ys[i + 1]))
+    }
 }
 
 private fun drawSpark(g: java.awt.Graphics2D, values: List<Double>, color: Color, x: Int, y: Int, w: Int, h: Int) {

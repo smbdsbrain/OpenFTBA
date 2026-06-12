@@ -84,6 +84,10 @@ data class RideSeriesDto(
     val heartRate: List<Double> = emptyList(),
     val cadence: List<Double> = emptyList(),
     val power: List<Double> = emptyList(),
+    // Track path for the 3D visualization, aligned 1:1 with the channels above (same
+    // downsample indices), so elevation/speed at index i belong to the point at (lat[i], lon[i]).
+    val lat: List<Double> = emptyList(),
+    val lon: List<Double> = emptyList(),
     val pauses: List<PauseDto> = emptyList(),
 )
 

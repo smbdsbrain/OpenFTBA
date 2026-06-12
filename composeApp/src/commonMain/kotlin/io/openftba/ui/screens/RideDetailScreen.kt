@@ -54,6 +54,10 @@ import io.openftba.ui.format.Format
 import io.openftba.ui.i18n.LocalStrings
 import io.openftba.ui.info.MetricKey
 import io.openftba.ui.theme.Palette
+import io.openftba.ui.track3d.Track3DView
+import io.openftba.ui.track3d.TrackGradient
+import io.openftba.ui.track3d.TrackRamps
+import io.openftba.ui.track3d.buildTrackArt
 
 private enum class XAxis { TIME, DISTANCE }
 
@@ -63,6 +67,7 @@ fun RideDetailScreen(detail: RideDetail, units: UnitSystem, onBack: () -> Unit) 
     val ride = detail.ride
     val scroll = rememberScrollState()
     var axis by remember { mutableStateOf(XAxis.DISTANCE) }
+    var gradient by remember { mutableStateOf(TrackGradient.SPEED) }
 
     val series = detail.series
     val xs = if (axis == XAxis.TIME) series.timeMin else series.distanceKm
@@ -93,7 +98,7 @@ fun RideDetailScreen(detail: RideDetail, units: UnitSystem, onBack: () -> Unit) 
                 Modifier.clickable {
                     scope.launch {
                         shareStatus = withContext(Dispatchers.Default) {
-                            exportShareCard(buildShareSpec(detail, units, s))
+                            exportShareCard(buildShareSpec(detail, units, s, gradient))
                         }
                     }
                 },
@@ -129,6 +134,26 @@ fun RideDetailScreen(detail: RideDetail, units: UnitSystem, onBack: () -> Unit) 
             }
         }
         TileGridLocal(tiles)
+
+        // 3D track — the route suspended in space (deliberately not a map).
+        if (series.lat.size >= 2) {
+            Spacer(Modifier.height(12.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                SectionHeader(s.track3d)
+                Spacer(Modifier.weight(1f))
+                AxisChip(s.chartSpeed, gradient == TrackGradient.SPEED) { gradient = TrackGradient.SPEED }
+                Spacer(Modifier.width(8.dp))
+                if (ride.channels.elevation) {
+                    AxisChip(s.chartElevation, gradient == TrackGradient.ELEVATION) { gradient = TrackGradient.ELEVATION }
+                }
+            }
+            Track3DView(
+                lat = series.lat, lon = series.lon, ele = series.elevation,
+                colorValues = if (gradient == TrackGradient.SPEED) series.speedKmh else series.elevation,
+                ramp = TrackRamps.forGradient(gradient),
+            )
+            Text(s.track3dHint, style = MaterialTheme.typography.labelSmall, color = Palette.OnMuted)
+        }
 
         Spacer(Modifier.height(12.dp))
         // X-axis toggle
@@ -219,9 +244,18 @@ private fun buildShareSpec(
     detail: RideDetail,
     units: UnitSystem,
     s: io.openftba.ui.i18n.Strings,
+    gradient: TrackGradient = TrackGradient.SPEED,
 ): ShareSpec {
     val m = detail.ride.metrics
+    val series = detail.series
     val tierKey = m.intensityTierKey
+    // 3D silhouette in the card's art band; the speed sparkline stays as the fallback.
+    val trackArt = buildTrackArt(
+        lat = series.lat, lon = series.lon, ele = series.elevation,
+        colorValues = if (gradient == TrackGradient.SPEED) series.speedKmh else series.elevation,
+        ramp = TrackRamps.forGradient(gradient),
+        aspect = 920.0 / 230.0,
+    )
     val spark = detail.series.speedKmh.let { v ->
         if (v.size <= 140) v else {
             val step = v.size / 140.0
@@ -243,6 +277,7 @@ private fun buildShareSpec(
         tierLabel = tierKey?.let { s.intensityTier(it) },
         tierColorArgb = tierKey?.let { (Palette.intensity[it] ?: Palette.Accent).toArgb() },
         spark = spark,
+        trackArt = trackArt,
         stats = buildList {
             add(ShareStat(s.movingTime, Format.duration(m.movingTimeSeconds)))
             add(ShareStat(s.avgSpeed, Format.speed(m.avgSpeed, units), Palette.Speed.toArgb()))

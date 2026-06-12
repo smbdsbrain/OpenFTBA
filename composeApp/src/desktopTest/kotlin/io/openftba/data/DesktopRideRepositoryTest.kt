@@ -32,8 +32,9 @@ class DesktopRideRepositoryTest {
         val first = state.rides.first()
         val detail = repo.detail(first.id)
         assertTrue(detail != null, "no detail for ${first.id}")
-        assertTrue(detail!!.track.allPoints.size > 1, "detail has no track points")
-        println("[pipeline] first ride ${first.name}: ${detail.track.allPoints.size} points, " +
+        val track = detail!!.track
+        assertTrue(track != null && track.allPoints.size > 1, "detail has no track points")
+        println("[pipeline] first ride ${first.name}: ${track!!.allPoints.size} points, " +
             "channels hr=${first.channels.heartRate} ele=${first.channels.elevation}")
     }
 }
