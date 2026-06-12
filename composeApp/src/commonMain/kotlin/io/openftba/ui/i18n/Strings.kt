@@ -123,6 +123,7 @@ interface Strings {
     val pauseStop: String
     val infoSourceLabel: String
     val infoFormulaLabel: String
+    val infoButton: String
     val infoScaleLabel: String
     val srcGps: String
     val srcDevice: String
@@ -248,6 +249,7 @@ object EnStrings : Strings {
     override val pauseStop = "Pause"
     override val infoSourceLabel = "Source"
     override val infoFormulaLabel = "Formula"
+    override val infoButton = "Metric info"
     override val infoScaleLabel = "Scale"
     override val srcGps = "GPS"
     override val srcDevice = "Sensor"
@@ -393,6 +395,7 @@ object RuStrings : Strings {
     override val pauseStop = "Пауза"
     override val infoSourceLabel = "Источник"
     override val infoFormulaLabel = "Формула"
+    override val infoButton = "О метрике"
     override val infoScaleLabel = "Шкала"
     override val srcGps = "GPS"
     override val srcDevice = "Датчик"
