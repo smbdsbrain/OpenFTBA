@@ -16,6 +16,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.openftba.ui.theme.Dimens
 import io.openftba.ui.theme.Palette
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -85,9 +86,9 @@ fun ChartTooltip(title: String, lines: List<TipLine>, cursorPx: Float, widthPx: 
                     placeable.place(x.roundToInt(), 0)
                 }
             }
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(Dimens.RadiusM))
             .background(Palette.SurfaceHigh)
-            .border(1.dp, Palette.Outline, RoundedCornerShape(8.dp))
+            .border(1.dp, Palette.Outline, RoundedCornerShape(Dimens.RadiusM))
             .padding(horizontal = 10.dp, vertical = 7.dp),
     ) {
         Text(title, style = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Medium), color = Palette.OnMuted)

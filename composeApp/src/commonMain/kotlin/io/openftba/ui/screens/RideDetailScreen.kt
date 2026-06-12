@@ -54,6 +54,7 @@ import io.openftba.ui.components.StatTile
 import io.openftba.ui.format.Format
 import io.openftba.ui.i18n.LocalStrings
 import io.openftba.ui.info.MetricKey
+import io.openftba.ui.theme.Dimens
 import io.openftba.ui.theme.Palette
 import io.openftba.ui.track3d.Track3DView
 import io.openftba.ui.track3d.TrackGradient
@@ -84,7 +85,7 @@ fun RideDetailScreen(detail: RideDetail, units: UnitSystem, onBack: () -> Unit) 
         ChartSpan(a, b, if (p.kind == "segment") Palette.Record else Palette.OnMuted)
     }
 
-    Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(20.dp)) {
+    Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(Dimens.ScreenPad)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 Icons.AutoMirrored.Filled.ArrowBack, "back",
@@ -215,7 +216,7 @@ private fun LegendSwatch(label: String, color: Color) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Spacer(
             Modifier.padding(end = 6.dp).height(10.dp)
-                .clip(RoundedCornerShape(2.dp)).background(color.copy(alpha = 0.5f))
+                .clip(RoundedCornerShape(Dimens.RadiusXs)).background(color.copy(alpha = 0.5f))
                 .width(14.dp),
         )
         Text(label, style = MaterialTheme.typography.labelSmall, color = Palette.OnMuted)

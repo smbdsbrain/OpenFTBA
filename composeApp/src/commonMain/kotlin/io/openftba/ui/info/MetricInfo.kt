@@ -49,6 +49,7 @@ import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
 import io.openftba.ui.i18n.LocalStrings
 import io.openftba.ui.i18n.Strings
+import io.openftba.ui.theme.Dimens
 import io.openftba.ui.theme.Palette
 
 /** Every metric that can show an info footnote. */
@@ -264,9 +265,9 @@ private fun InfoCard(title: String, info: MetricInfo, s: Strings) {
     Column(
         Modifier
             .widthIn(min = 200.dp, max = 320.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(Dimens.RadiusL))
             .background(Palette.SurfaceHigh)
-            .border(1.dp, Palette.Outline, RoundedCornerShape(12.dp))
+            .border(1.dp, Palette.Outline, RoundedCornerShape(Dimens.RadiusL))
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -285,7 +286,7 @@ private fun InfoCard(title: String, info: MetricInfo, s: Strings) {
         info.formula?.let { f ->
             Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Text(s.infoFormulaLabel.uppercase(), style = MaterialTheme.typography.labelSmall, color = Palette.OnMuted)
-                Box(Modifier.clip(RoundedCornerShape(6.dp)).background(Palette.Surface).padding(horizontal = 8.dp, vertical = 5.dp)) {
+                Box(Modifier.clip(RoundedCornerShape(Dimens.RadiusS)).background(Palette.Surface).padding(horizontal = 8.dp, vertical = 5.dp)) {
                     Text(f, style = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 12.sp), color = Palette.OnBase)
                 }
             }

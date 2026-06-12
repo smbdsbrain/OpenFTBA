@@ -29,6 +29,7 @@ import io.openftba.settings.UnitSystem
 import io.openftba.ui.components.Pill
 import io.openftba.ui.format.Format
 import io.openftba.ui.i18n.LocalStrings
+import io.openftba.ui.theme.Dimens
 import io.openftba.ui.theme.Palette
 import io.openftba.data.RepoState
 import kotlinx.datetime.TimeZone
@@ -46,9 +47,9 @@ fun RideListScreen(
         return
     }
     LazyColumn(
-        Modifier.fillMaxSize().padding(horizontal = 20.dp),
+        Modifier.fillMaxSize().padding(horizontal = Dimens.ScreenPad),
         state = listState,
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 20.dp),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = Dimens.ScreenPad),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         item {
@@ -66,9 +67,9 @@ private fun RideRow(ride: Ride, units: UnitSystem, onClick: () -> Unit) {
     val s = LocalStrings.current
     Column(
         Modifier.fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(Dimens.RadiusCard))
             .background(Palette.Surface)
-            .border(1.dp, Palette.Outline, RoundedCornerShape(14.dp))
+            .border(1.dp, Palette.Outline, RoundedCornerShape(Dimens.RadiusCard))
             .clickable(onClick = onClick)
             .padding(16.dp),
     ) {

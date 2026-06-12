@@ -34,6 +34,7 @@ import io.openftba.ui.components.Pill
 import io.openftba.ui.components.SectionHeader
 import io.openftba.ui.i18n.Language
 import io.openftba.ui.i18n.LocalStrings
+import io.openftba.ui.theme.Dimens
 import io.openftba.ui.theme.Palette
 
 @Composable
@@ -51,7 +52,7 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
     var demStatus by remember { mutableStateOf("") }
 
-    Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(20.dp)) {
+    Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(Dimens.ScreenPad)) {
         Text(s.navSettings, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.SemiBold, color = Palette.OnBase)
         Spacer(Modifier.height(16.dp))
 
