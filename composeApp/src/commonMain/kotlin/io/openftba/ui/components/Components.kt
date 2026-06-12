@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.openftba.ui.info.MetricInfoDot
 import io.openftba.ui.info.MetricKey
@@ -70,6 +71,8 @@ fun StatTile(
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = if (record) Palette.Record else accent,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
         if (sub != null) {

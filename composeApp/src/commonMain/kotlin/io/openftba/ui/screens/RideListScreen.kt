@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.openftba.model.Ride
 import io.openftba.settings.UnitSystem
@@ -73,8 +74,15 @@ private fun RideRow(ride: Ride, units: UnitSystem, onClick: () -> Unit) {
             .clickable(onClick = onClick)
             .padding(16.dp),
     ) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(formatDateTime(ride.startTime), style = MaterialTheme.typography.titleMedium, color = Palette.OnBase)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                formatDateTime(ride.startTime),
+                style = MaterialTheme.typography.titleMedium,
+                color = Palette.OnBase,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f).padding(end = 8.dp),
+            )
             Text(Format.distance(ride.metrics.distanceMeters, units), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = Palette.Accent)
         }
         Spacer(Modifier.height(8.dp))

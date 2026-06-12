@@ -26,6 +26,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.openftba.data.RepoState
 import io.openftba.settings.AppSettings
@@ -66,6 +67,7 @@ fun SettingsScreen(
                     settings.watchFolder ?: s.settingsWatchFolderHint,
                     style = MaterialTheme.typography.labelSmall, color = Palette.OnMuted,
                     modifier = Modifier.padding(top = 4.dp),
+                    maxLines = 2, overflow = TextOverflow.Ellipsis,
                 )
             }
             else -> OutlinedTextField(
@@ -91,6 +93,7 @@ fun SettingsScreen(
                     settings.demFolder ?: s.settingsDemFolderHint,
                     style = MaterialTheme.typography.labelSmall, color = Palette.OnMuted,
                     modifier = Modifier.padding(top = 4.dp),
+                    maxLines = 2, overflow = TextOverflow.Ellipsis,
                 )
             }
             else -> OutlinedTextField(
@@ -184,6 +187,7 @@ private fun ReadOnlyPath(path: String?, hint: String) {
             path ?: "—",
             style = MaterialTheme.typography.bodyMedium,
             color = if (path != null) Palette.OnBase else Palette.OnMuted,
+            maxLines = 2, overflow = TextOverflow.Ellipsis,
         )
         Text(hint, style = MaterialTheme.typography.labelSmall, color = Palette.OnMuted, modifier = Modifier.padding(top = 2.dp))
     }
