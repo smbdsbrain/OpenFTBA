@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
@@ -24,12 +25,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.openftba.ui.LocalWidthClass
+import io.openftba.ui.WidthClass
 import io.openftba.ui.theme.Palette
 import kotlin.math.atan2
 import kotlin.math.hypot
@@ -45,8 +49,31 @@ fun DonutChart(segments: List<DonutSegment>, modifier: Modifier = Modifier) {
     val measurer = rememberTextMeasurer()
     var hover by remember { mutableStateOf<Int?>(null) }
 
-    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(124.dp)) {
+    // Narrow screens stack the legend under the donut instead of squeezing it beside.
+    if (LocalWidthClass.current == WidthClass.Compact) {
+        Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+            Donut(segments, total, measurer, hover) { hover = it }
+            Spacer(Modifier.height(12.dp))
+            DonutLegend(segments, hover)
+        }
+    } else {
+        Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+            Donut(segments, total, measurer, hover) { hover = it }
+            Spacer(Modifier.width(20.dp))
+            DonutLegend(segments, hover)
+        }
+    }
+}
+
+@Composable
+private fun Donut(
+    segments: List<DonutSegment>,
+    total: Double,
+    measurer: TextMeasurer,
+    hover: Int?,
+    onHover: (Int?) -> Unit,
+) {
+    Box(Modifier.size(124.dp)) {
             if (total > 0) Canvas(
                 Modifier.size(124.dp).pointerInput(segments.size) {
                     awaitPointerEventScope {
@@ -54,12 +81,12 @@ fun DonutChart(segments: List<DonutSegment>, modifier: Modifier = Modifier) {
                             val e = awaitPointerEvent()
                             val pos = e.changes.first().position
                             when (e.type) {
-                                PointerEventType.Exit, PointerEventType.Release -> hover = null
+                                PointerEventType.Exit, PointerEventType.Release -> onHover(null)
                                 else -> {
                                     val cx = size.width / 2f; val cy = size.height / 2f
                                     val dist = hypot(pos.x - cx, pos.y - cy)
                                     val outer = minOf(size.width, size.height) / 2f
-                                    if (dist > outer || dist < outer * 0.58f / 2f) { hover = null }
+                                    if (dist > outer || dist < outer * 0.58f / 2f) { onHover(null) }
                                     else {
                                         var deg = atan2(pos.y - cy, pos.x - cx) * 180f / PI.toFloat()
                                         var rel = deg - (-90f); if (rel < 0) rel += 360f
@@ -70,7 +97,7 @@ fun DonutChart(segments: List<DonutSegment>, modifier: Modifier = Modifier) {
                                             if (found == null && rel >= acc && rel < acc + sweep) found = i
                                             acc += sweep
                                         }
-                                        hover = found
+                                        onHover(found)
                                     }
                                 }
                             }
@@ -103,20 +130,22 @@ fun DonutChart(segments: List<DonutSegment>, modifier: Modifier = Modifier) {
                 val r = measurer.measure(centerText, TextStyle(color = Palette.OnBase, fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
                 drawText(r, topLeft = Offset(size.width / 2 - r.size.width / 2f, size.height / 2 - r.size.height / 2f))
             }
-        }
-        Spacer(Modifier.width(20.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            segments.filter { it.value > 0 }.forEachIndexed { idx, seg ->
-                val realIdx = segments.indexOf(seg)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Canvas(Modifier.size(11.dp)) { drawRect(seg.color, size = Size(size.width, size.height)) }
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        "${seg.label} — ${seg.value.toInt()}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = if (hover == null || hover == realIdx) Palette.OnBase else Palette.OnMuted,
-                    )
-                }
+    }
+}
+
+@Composable
+private fun DonutLegend(segments: List<DonutSegment>, hover: Int?) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        segments.filter { it.value > 0 }.forEach { seg ->
+            val realIdx = segments.indexOf(seg)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Canvas(Modifier.size(11.dp)) { drawRect(seg.color, size = Size(size.width, size.height)) }
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    "${seg.label} — ${seg.value.toInt()}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (hover == null || hover == realIdx) Palette.OnBase else Palette.OnMuted,
+                )
             }
         }
     }

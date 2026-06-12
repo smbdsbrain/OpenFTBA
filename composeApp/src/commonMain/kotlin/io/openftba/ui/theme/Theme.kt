@@ -9,6 +9,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
@@ -55,6 +56,26 @@ object Palette {
         "E" to Color(0xFFC98A8A),
         "F" to Color(0xFF6B7280),
     )
+}
+
+/**
+ * Spacing/radius scale. Use these instead of ad-hoc dp literals so screens stay on one
+ * visual rhythm: SpaceXs..SpaceXl for gaps, ScreenPad for screen edges, RadiusXs..RadiusCard
+ * for corners (cards/tiles share RadiusCard; pills stay fully rounded).
+ */
+object Dimens {
+    val SpaceXs = 4.dp
+    val SpaceS = 8.dp
+    val SpaceM = 12.dp
+    val SpaceL = 16.dp
+    val SpaceXl = 24.dp
+    val ScreenPad = 20.dp
+
+    val RadiusXs = 2.dp
+    val RadiusS = 6.dp
+    val RadiusM = 8.dp
+    val RadiusL = 12.dp
+    val RadiusCard = 14.dp
 }
 
 private val OpenFtbaColors = darkColorScheme(

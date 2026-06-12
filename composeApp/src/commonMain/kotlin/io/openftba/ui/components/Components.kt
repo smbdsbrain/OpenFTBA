@@ -17,9 +17,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.openftba.ui.info.MetricInfoDot
 import io.openftba.ui.info.MetricKey
+import io.openftba.ui.theme.Dimens
 import io.openftba.ui.theme.Palette
 
 @Composable
@@ -54,9 +56,9 @@ fun StatTile(
 ) {
     Column(
         modifier
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(Dimens.RadiusCard))
             .background(Palette.Surface)
-            .border(1.dp, if (record) Palette.Record.copy(alpha = 0.5f) else Palette.Outline, RoundedCornerShape(14.dp))
+            .border(1.dp, if (record) Palette.Record.copy(alpha = 0.5f) else Palette.Outline, RoundedCornerShape(Dimens.RadiusCard))
             .padding(14.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -69,6 +71,8 @@ fun StatTile(
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = if (record) Palette.Record else accent,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
         if (sub != null) {

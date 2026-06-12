@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -21,27 +23,34 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.openftba.model.Ride
 import io.openftba.settings.UnitSystem
 import io.openftba.ui.components.Pill
 import io.openftba.ui.format.Format
 import io.openftba.ui.i18n.LocalStrings
+import io.openftba.ui.theme.Dimens
 import io.openftba.ui.theme.Palette
 import io.openftba.data.RepoState
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
 @Composable
-fun RideListScreen(state: RepoState, onOpenRide: (String) -> Unit) {
+fun RideListScreen(
+    state: RepoState,
+    listState: LazyListState = rememberLazyListState(),
+    onOpenRide: (String) -> Unit,
+) {
     val s = LocalStrings.current
     if (state.rides.isEmpty()) {
         EmptyState(title = s.noRidesTitle, hint = s.noRidesHint)
         return
     }
     LazyColumn(
-        Modifier.fillMaxSize().padding(horizontal = 20.dp),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 20.dp),
+        Modifier.fillMaxSize().padding(horizontal = Dimens.ScreenPad),
+        state = listState,
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = Dimens.ScreenPad),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         item {
@@ -59,14 +68,21 @@ private fun RideRow(ride: Ride, units: UnitSystem, onClick: () -> Unit) {
     val s = LocalStrings.current
     Column(
         Modifier.fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(Dimens.RadiusCard))
             .background(Palette.Surface)
-            .border(1.dp, Palette.Outline, RoundedCornerShape(14.dp))
+            .border(1.dp, Palette.Outline, RoundedCornerShape(Dimens.RadiusCard))
             .clickable(onClick = onClick)
             .padding(16.dp),
     ) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(formatDateTime(ride.startTime), style = MaterialTheme.typography.titleMedium, color = Palette.OnBase)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                formatDateTime(ride.startTime),
+                style = MaterialTheme.typography.titleMedium,
+                color = Palette.OnBase,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f).padding(end = 8.dp),
+            )
             Text(Format.distance(ride.metrics.distanceMeters, units), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = Palette.Accent)
         }
         Spacer(Modifier.height(8.dp))

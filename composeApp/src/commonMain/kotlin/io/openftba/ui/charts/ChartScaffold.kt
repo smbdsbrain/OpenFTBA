@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -12,11 +11,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.openftba.ui.theme.Dimens
 import io.openftba.ui.theme.Palette
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -72,15 +72,23 @@ fun evenTicks(min: Double, max: Double, n: Int): List<Double> {
 /** Themed floating tooltip overlay, positioned by cursor pixel-x within a chart of [widthPx]. */
 @Composable
 fun ChartTooltip(title: String, lines: List<TipLine>, cursorPx: Float, widthPx: Float) {
-    val estW = 150f
-    val x = (cursorPx + 12f).coerceIn(0f, (widthPx - estW).coerceAtLeast(0f))
     Column(
         Modifier
             .padding(top = 6.dp)
-            .offset { IntOffset(x.roundToInt(), 0) }
-            .clip(RoundedCornerShape(8.dp))
+            // Measure the real tooltip and place it right of the cursor when it fits,
+            // otherwise flip to the left — it never overflows nor covers the hovered point.
+            .layout { measurable, constraints ->
+                val placeable = measurable.measure(constraints)
+                val gap = 12f
+                val x = if (cursorPx + gap + placeable.width <= widthPx) cursorPx + gap
+                else (cursorPx - gap - placeable.width).coerceAtLeast(0f)
+                layout(placeable.width, placeable.height) {
+                    placeable.place(x.roundToInt(), 0)
+                }
+            }
+            .clip(RoundedCornerShape(Dimens.RadiusM))
             .background(Palette.SurfaceHigh)
-            .border(1.dp, Palette.Outline, RoundedCornerShape(8.dp))
+            .border(1.dp, Palette.Outline, RoundedCornerShape(Dimens.RadiusM))
             .padding(horizontal = 10.dp, vertical = 7.dp),
     ) {
         Text(title, style = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Medium), color = Palette.OnMuted)

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
@@ -26,18 +27,29 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
 import io.openftba.ui.i18n.LocalStrings
 import io.openftba.ui.i18n.Strings
+import io.openftba.ui.theme.Dimens
 import io.openftba.ui.theme.Palette
 
 /** Every metric that can show an info footnote. */
@@ -165,6 +177,29 @@ private fun sourceColor(kind: MetricSourceKind) = when (kind) {
  * (so you can read it / follow the link) until you click the dot again or click away. The
  * glyph is a drawn ASCII "i" so it renders in every browser font.
  */
+/**
+ * Places the popup under its anchor, clamped to the window: shifted left when it would
+ * overflow the right edge, flipped above the anchor when it would overflow the bottom.
+ */
+private class ClampedPopupPositionProvider(private val marginPx: Int) : PopupPositionProvider {
+    override fun calculatePosition(
+        anchorBounds: IntRect,
+        windowSize: IntSize,
+        layoutDirection: LayoutDirection,
+        popupContentSize: IntSize,
+    ): IntOffset {
+        var x = anchorBounds.left
+        if (x + popupContentSize.width > windowSize.width) {
+            x = (windowSize.width - popupContentSize.width - marginPx).coerceAtLeast(0)
+        }
+        var y = anchorBounds.bottom + marginPx
+        if (y + popupContentSize.height > windowSize.height) {
+            y = (anchorBounds.top - marginPx - popupContentSize.height).coerceAtLeast(0)
+        }
+        return IntOffset(x, y)
+    }
+}
+
 @Composable
 fun MetricInfoDot(title: String, key: MetricKey, modifier: Modifier = Modifier) {
     val s = LocalStrings.current
@@ -172,12 +207,15 @@ fun MetricInfoDot(title: String, key: MetricKey, modifier: Modifier = Modifier) 
     var hovered by remember { mutableStateOf(false) }
     var pinned by remember { mutableStateOf(false) }
     val show = hovered || pinned
-    Box(modifier) {
+    val positionProvider = with(LocalDensity.current) {
+        remember(this) { ClampedPopupPositionProvider(8.dp.roundToPx()) }
+    }
+    // The dot keeps its 15dp layout footprint; the 32dp hit area overflows it centered
+    // (requiredSize), so taps are comfortable without inflating the surrounding row.
+    Box(modifier.size(15.dp), contentAlignment = Alignment.Center) {
         Box(
             Modifier
-                .size(15.dp)
-                .clip(CircleShape)
-                .border(1.dp, if (show) Palette.Accent else Palette.OnMuted, CircleShape)
+                .requiredSize(32.dp)
                 .pointerInput(Unit) {
                     awaitPointerEventScope {
                         while (true) {
@@ -189,19 +227,30 @@ fun MetricInfoDot(title: String, key: MetricKey, modifier: Modifier = Modifier) 
                         }
                     }
                 }
-                .clickable { pinned = !pinned },
+                .clickable { pinned = !pinned }
+                .semantics {
+                    role = Role.Button
+                    contentDescription = "$title: ${s.infoButton}"
+                },
             contentAlignment = Alignment.Center,
         ) {
-            Text(
-                "i",
-                style = TextStyle(fontSize = 10.sp, fontWeight = FontWeight.Bold),
-                color = if (show) Palette.Accent else Palette.OnMuted,
-            )
+            Box(
+                Modifier
+                    .size(15.dp)
+                    .clip(CircleShape)
+                    .border(1.dp, if (show) Palette.Accent else Palette.OnMuted, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    "i",
+                    style = TextStyle(fontSize = 10.sp, fontWeight = FontWeight.Bold),
+                    color = if (show) Palette.Accent else Palette.OnMuted,
+                )
+            }
         }
         if (show) {
             Popup(
-                alignment = Alignment.TopStart,
-                offset = IntOffset(0, 38),
+                popupPositionProvider = positionProvider,
                 onDismissRequest = { pinned = false },
                 properties = PopupProperties(focusable = pinned),
             ) {
@@ -215,22 +264,29 @@ fun MetricInfoDot(title: String, key: MetricKey, modifier: Modifier = Modifier) 
 private fun InfoCard(title: String, info: MetricInfo, s: Strings) {
     Column(
         Modifier
-            .widthIn(min = 230.dp, max = 320.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .widthIn(min = 200.dp, max = 320.dp)
+            .clip(RoundedCornerShape(Dimens.RadiusL))
             .background(Palette.SurfaceHigh)
-            .border(1.dp, Palette.Outline, RoundedCornerShape(12.dp))
+            .border(1.dp, Palette.Outline, RoundedCornerShape(Dimens.RadiusL))
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = Palette.OnBase)
+            Text(
+                title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = Palette.OnBase,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
             info.source?.let { SourcePill(it, s) }
         }
         Text(info.description, style = MaterialTheme.typography.bodySmall, color = Palette.OnMuted)
         info.formula?.let { f ->
             Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Text(s.infoFormulaLabel.uppercase(), style = MaterialTheme.typography.labelSmall, color = Palette.OnMuted)
-                Box(Modifier.clip(RoundedCornerShape(6.dp)).background(Palette.Surface).padding(horizontal = 8.dp, vertical = 5.dp)) {
+                Box(Modifier.clip(RoundedCornerShape(Dimens.RadiusS)).background(Palette.Surface).padding(horizontal = 8.dp, vertical = 5.dp)) {
                     Text(f, style = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 12.sp), color = Palette.OnBase)
                 }
             }

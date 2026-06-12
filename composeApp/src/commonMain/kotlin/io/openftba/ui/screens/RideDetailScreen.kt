@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.openftba.analytics.Geo
 import io.openftba.data.RideDetail
@@ -47,6 +49,8 @@ import io.openftba.ui.charts.AxisSpec
 import io.openftba.ui.charts.ChartSpan
 import io.openftba.ui.charts.InteractiveLineChart
 import io.openftba.ui.charts.LineSeries
+import io.openftba.ui.LocalWidthClass
+import io.openftba.ui.WidthClass
 import io.openftba.ui.charts.nearestIndex
 import io.openftba.ui.components.Pill
 import io.openftba.ui.components.SectionHeader
@@ -54,6 +58,7 @@ import io.openftba.ui.components.StatTile
 import io.openftba.ui.format.Format
 import io.openftba.ui.i18n.LocalStrings
 import io.openftba.ui.info.MetricKey
+import io.openftba.ui.theme.Dimens
 import io.openftba.ui.theme.Palette
 import io.openftba.ui.track3d.Track3DView
 import io.openftba.ui.track3d.TrackGradient
@@ -84,15 +89,19 @@ fun RideDetailScreen(detail: RideDetail, units: UnitSystem, onBack: () -> Unit) 
         ChartSpan(a, b, if (p.kind == "segment") Palette.Record else Palette.OnMuted)
     }
 
-    Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(20.dp)) {
+    Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(Dimens.ScreenPad)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                Icons.AutoMirrored.Filled.ArrowBack, "back",
-                tint = Palette.OnMuted,
-                modifier = Modifier.clickable(onClick = onBack).padding(end = 12.dp),
+            IconButton(onClick = onBack, modifier = Modifier.padding(end = 4.dp)) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = s.back, tint = Palette.OnMuted)
+            }
+            Text(
+                formatDateTime(ride.startTime),
+                style = MaterialTheme.typography.headlineMedium,
+                color = Palette.OnBase,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
             )
-            Text(formatDateTime(ride.startTime), style = MaterialTheme.typography.headlineMedium, color = Palette.OnBase)
-            Spacer(Modifier.weight(1f))
             Pill(
                 "📤 " + s.share,
                 Palette.Accent,
@@ -215,7 +224,7 @@ private fun LegendSwatch(label: String, color: Color) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Spacer(
             Modifier.padding(end = 6.dp).height(10.dp)
-                .clip(RoundedCornerShape(2.dp)).background(color.copy(alpha = 0.5f))
+                .clip(RoundedCornerShape(Dimens.RadiusXs)).background(color.copy(alpha = 0.5f))
                 .width(14.dp),
         )
         Text(label, style = MaterialTheme.typography.labelSmall, color = Palette.OnMuted)
@@ -231,7 +240,8 @@ private fun AxisChip(label: String, selected: Boolean, onClick: () -> Unit) {
 private data class STile(val label: String, val value: String, val accent: Color = Palette.OnBase, val info: MetricKey? = null)
 
 @Composable
-private fun TileGridLocal(tiles: List<STile>, columns: Int = 3) {
+private fun TileGridLocal(tiles: List<STile>) {
+    val columns = if (LocalWidthClass.current == WidthClass.Compact) 2 else 3
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         tiles.chunked(columns).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {

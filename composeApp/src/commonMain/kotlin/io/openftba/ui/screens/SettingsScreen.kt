@@ -26,6 +26,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.openftba.data.RepoState
 import io.openftba.settings.AppSettings
@@ -34,6 +35,7 @@ import io.openftba.ui.components.Pill
 import io.openftba.ui.components.SectionHeader
 import io.openftba.ui.i18n.Language
 import io.openftba.ui.i18n.LocalStrings
+import io.openftba.ui.theme.Dimens
 import io.openftba.ui.theme.Palette
 
 @Composable
@@ -51,7 +53,7 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
     var demStatus by remember { mutableStateOf("") }
 
-    Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(20.dp)) {
+    Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(Dimens.ScreenPad)) {
         Text(s.navSettings, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.SemiBold, color = Palette.OnBase)
         Spacer(Modifier.height(16.dp))
 
@@ -65,6 +67,7 @@ fun SettingsScreen(
                     settings.watchFolder ?: s.settingsWatchFolderHint,
                     style = MaterialTheme.typography.labelSmall, color = Palette.OnMuted,
                     modifier = Modifier.padding(top = 4.dp),
+                    maxLines = 2, overflow = TextOverflow.Ellipsis,
                 )
             }
             else -> OutlinedTextField(
@@ -90,6 +93,7 @@ fun SettingsScreen(
                     settings.demFolder ?: s.settingsDemFolderHint,
                     style = MaterialTheme.typography.labelSmall, color = Palette.OnMuted,
                     modifier = Modifier.padding(top = 4.dp),
+                    maxLines = 2, overflow = TextOverflow.Ellipsis,
                 )
             }
             else -> OutlinedTextField(
@@ -183,6 +187,7 @@ private fun ReadOnlyPath(path: String?, hint: String) {
             path ?: "—",
             style = MaterialTheme.typography.bodyMedium,
             color = if (path != null) Palette.OnBase else Palette.OnMuted,
+            maxLines = 2, overflow = TextOverflow.Ellipsis,
         )
         Text(hint, style = MaterialTheme.typography.labelSmall, color = Palette.OnMuted, modifier = Modifier.padding(top = 2.dp))
     }

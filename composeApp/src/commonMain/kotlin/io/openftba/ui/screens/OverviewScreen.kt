@@ -39,7 +39,10 @@ import io.openftba.ui.format.Format
 import io.openftba.ui.i18n.LocalStrings
 import io.openftba.ui.info.MetricInfoDot
 import io.openftba.ui.info.MetricKey
+import io.openftba.ui.LocalWidthClass
+import io.openftba.ui.WidthClass
 import io.openftba.ui.overview.OverviewStats
+import io.openftba.ui.theme.Dimens
 import io.openftba.ui.theme.Palette
 
 @Composable
@@ -60,7 +63,7 @@ fun OverviewScreen(state: RepoState) {
     )
     val fitness = io.openftba.analytics.FitnessScale.evaluate(profile, state.rides)
 
-    Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(20.dp)) {
+    Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(Dimens.ScreenPad)) {
         Text(s.navOverview, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.SemiBold, color = Palette.OnBase)
         Spacer(Modifier.height(12.dp))
         AthleteBadge(fitness, units)
@@ -159,7 +162,8 @@ fun OverviewScreen(state: RepoState) {
 private data class Tile(val label: String, val value: String, val record: Boolean = false, val accent: androidx.compose.ui.graphics.Color = Palette.OnBase, val info: MetricKey? = null)
 
 @Composable
-private fun TileGrid(tiles: List<Tile>, columns: Int = 3) {
+private fun TileGrid(tiles: List<Tile>) {
+    val columns = if (LocalWidthClass.current == WidthClass.Compact) 2 else 3
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         tiles.chunked(columns).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -192,7 +196,7 @@ private fun distanceHistogram(rides: List<io.openftba.model.Ride>, units: UnitSy
 @Composable
 private fun LegendDot(label: String, color: androidx.compose.ui.graphics.Color, info: MetricKey? = null) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(10.dp).clip(RoundedCornerShape(2.dp)).background(color))
+        Box(Modifier.size(10.dp).clip(RoundedCornerShape(Dimens.RadiusXs)).background(color))
         Text(" $label", style = MaterialTheme.typography.labelSmall, color = Palette.OnMuted)
         if (info != null) MetricInfoDot(label, info, Modifier.padding(start = 2.dp))
     }
@@ -214,13 +218,13 @@ private fun AthleteBadge(fitness: io.openftba.analytics.FitnessResult, units: io
         else Format.speed(it / 3.6, units)
     } ?: ""
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Palette.Surface)
-            .border(1.dp, Palette.Outline, RoundedCornerShape(16.dp)).padding(16.dp),
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(Dimens.RadiusCard)).background(Palette.Surface)
+            .border(1.dp, Palette.Outline, RoundedCornerShape(Dimens.RadiusCard)).padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(18.dp),
     ) {
         Box(
-            Modifier.size(64.dp).clip(RoundedCornerShape(16.dp)).border(2.dp, color, RoundedCornerShape(16.dp)),
+            Modifier.size(64.dp).clip(RoundedCornerShape(Dimens.RadiusCard)).border(2.dp, color, RoundedCornerShape(Dimens.RadiusCard)),
             contentAlignment = Alignment.Center,
         ) {
             Text(key, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold, color = color)

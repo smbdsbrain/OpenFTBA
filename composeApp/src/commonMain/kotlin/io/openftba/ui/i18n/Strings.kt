@@ -53,6 +53,13 @@ interface Strings {
     val noData: String
     val noRidesTitle: String
     val noRidesHint: String
+    val back: String
+    val loadingRide: String
+    val rideNotFound: String
+    /** Three-letter month labels, Jan..Dec, for the calendar heatmap. */
+    val monthsShort: List<String>
+    /** Short weekday labels, Mon..Sun (Monday-first, matching the heatmap rows). */
+    val weekdaysShort: List<String>
 
     // Ride detail
     val rideSummary: String
@@ -120,6 +127,7 @@ interface Strings {
     val pauseStop: String
     val infoSourceLabel: String
     val infoFormulaLabel: String
+    val infoButton: String
     val infoScaleLabel: String
     val srcGps: String
     val srcDevice: String
@@ -181,6 +189,11 @@ object EnStrings : Strings {
     override val noData = "No data"
     override val noRidesTitle = "No rides yet"
     override val noRidesHint = "Point the watch folder at your OpenTracks export folder in Settings."
+    override val back = "Back"
+    override val loadingRide = "Loading ride…"
+    override val rideNotFound = "Ride not found"
+    override val monthsShort = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+    override val weekdaysShort = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
     override val rideSummary = "Summary"
     override val splits = "Splits"
     override val axisTime = "Time"
@@ -242,6 +255,7 @@ object EnStrings : Strings {
     override val pauseStop = "Pause"
     override val infoSourceLabel = "Source"
     override val infoFormulaLabel = "Formula"
+    override val infoButton = "Metric info"
     override val infoScaleLabel = "Scale"
     override val srcGps = "GPS"
     override val srcDevice = "Sensor"
@@ -323,6 +337,11 @@ object RuStrings : Strings {
     override val noData = "Нет данных"
     override val noRidesTitle = "Пока нет тренировок"
     override val noRidesHint = "Укажите в настройках папку экспорта OpenTracks."
+    override val back = "Назад"
+    override val loadingRide = "Загрузка тренировки…"
+    override val rideNotFound = "Тренировка не найдена"
+    override val monthsShort = listOf("Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек")
+    override val weekdaysShort = listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс")
     override val rideSummary = "Сводка"
     override val splits = "Сплиты"
     override val axisTime = "Время"
@@ -384,6 +403,7 @@ object RuStrings : Strings {
     override val pauseStop = "Пауза"
     override val infoSourceLabel = "Источник"
     override val infoFormulaLabel = "Формула"
+    override val infoButton = "О метрике"
     override val infoScaleLabel = "Шкала"
     override val srcGps = "GPS"
     override val srcDevice = "Датчик"
