@@ -75,7 +75,22 @@ class Track3DTest {
 
         val topDown = Track3D.projectAll(xs, ys, zs, yaw = 0.0, pitch = PI / 2, cameraDist = ortho)
         assertEquals(0.3f, topDown[0], 1e-6f)
-        assertEquals(0.1f, topDown[1], 1e-6f)  // sy = z (north points down-screen)
+        assertEquals(-0.1f, topDown[1], 1e-6f)  // sy = -z (north points up-screen)
+    }
+
+    @Test
+    fun projectAll_positivePitchLooksDownFromAbove() {
+        // A floor point to the north must rise toward the top of the screen and move away from
+        // the camera — otherwise the scene reads as viewed from below.
+        val north = Track3D.projectAll(doubleArrayOf(0.0), doubleArrayOf(0.0), doubleArrayOf(1.0), yaw = 0.0, pitch = 0.5)
+        assertTrue(north[1] < 0f, "north floor point should project above center")
+        // And a point above the floor still reads as "up".
+        val up = Track3D.projectAll(doubleArrayOf(0.0), doubleArrayOf(1.0), doubleArrayOf(0.0), yaw = 0.0, pitch = 0.5)
+        assertTrue(up[1] < 0f, "elevated point should project above center")
+        // Depth check via perspective: the north point must shrink (be farther) vs the south one.
+        val south = Track3D.projectAll(doubleArrayOf(0.3), doubleArrayOf(0.0), doubleArrayOf(-1.0), yaw = 0.0, pitch = 0.5)
+        val northX = Track3D.projectAll(doubleArrayOf(0.3), doubleArrayOf(0.0), doubleArrayOf(1.0), yaw = 0.0, pitch = 0.5)
+        assertTrue(abs(south[0]) > abs(northX[0]), "south (near) should project larger than north (far)")
     }
 
     @Test

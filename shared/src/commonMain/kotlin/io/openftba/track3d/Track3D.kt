@@ -98,9 +98,10 @@ object Track3D {
 
     /**
      * Rotate model-space points (yaw about Y, then pitch about X) and apply a weak perspective
-     * projection. Returns packed screen fractions [sx0, sy0, sx1, sy1, ...] with y growing
-     * downward; for a unit-box model values stay roughly within ±0.6. The caller maps them to
-     * pixels as `center + s * scalePx`.
+     * projection. Positive pitch places the camera *above* the floor looking down: far (north)
+     * floor points rise toward the top of the screen, like looking at a table. Returns packed
+     * screen fractions [sx0, sy0, sx1, sy1, ...] with y growing downward; for a unit-box model
+     * values stay roughly within ±0.6. The caller maps them to pixels as `center + s * scalePx`.
      */
     fun projectAll(
         xs: DoubleArray,
@@ -116,8 +117,8 @@ object Track3D {
         for (i in xs.indices) {
             val x1 = xs[i] * cy - zs[i] * sy
             val z1 = xs[i] * sy + zs[i] * cy
-            val y2 = ys[i] * cp - z1 * sp
-            val z2 = ys[i] * sp + z1 * cp
+            val y2 = ys[i] * cp + z1 * sp
+            val z2 = z1 * cp - ys[i] * sp
             val s = cameraDist / (cameraDist + z2)
             out[i * 2] = (x1 * s).toFloat()
             out[i * 2 + 1] = (-y2 * s).toFloat()
