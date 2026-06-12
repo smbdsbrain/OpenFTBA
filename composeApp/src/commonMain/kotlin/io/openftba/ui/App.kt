@@ -26,6 +26,7 @@ import io.openftba.ui.i18n.Language
 import io.openftba.ui.i18n.LocalStrings
 import io.openftba.ui.i18n.stringsFor
 import io.openftba.ui.nav.NavState
+import io.openftba.ui.nav.PlatformBackHandler
 import io.openftba.ui.nav.Tab
 import io.openftba.ui.nav.rememberNavState
 import io.openftba.ui.screens.EmptyState
@@ -49,6 +50,8 @@ fun App(
     val navState = nav ?: rememberNavState()
     // Hoisted so scroll positions survive switching tabs / opening a ride detail.
     val ridesListState = rememberLazyListState()
+
+    PlatformBackHandler(enabled = navState.canGoBack) { navState.goBack() }
 
     // Initial scan when a folder is configured.
     LaunchedEffect(
