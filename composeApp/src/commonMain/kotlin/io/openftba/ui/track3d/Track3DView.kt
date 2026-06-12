@@ -1,7 +1,7 @@
 package io.openftba.ui.track3d
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -24,8 +25,10 @@ import kotlin.math.min
 /**
  * The ride's route as a 3D figure suspended in space (deliberately not on a map): the track
  * line above a floor grid, with a translucent "shadow" projection and sparse vertical drop
- * lines selling the elevation. Drag to orbit (yaw free, pitch clamped above the floor).
- * [colorValues] (speed or elevation, aligned 1:1 with the points) drives the gradient.
+ * lines selling the elevation. Drag to orbit (yaw free, pitch clamped above the floor);
+ * mouse wheel or pinch to zoom. [colorValues] (speed or elevation, aligned 1:1 with the
+ * points) drives the gradient. [cursorIndex] highlights one point — wired to the shared
+ * chart cursor so hovering the charts shows where on the route that moment happened.
  */
 @Composable
 fun Track3DView(
@@ -36,6 +39,7 @@ fun Track3DView(
     ramp: List<Color>,
     modifier: Modifier = Modifier,
     height: Dp = 300.dp,
+    cursorIndex: Int? = null,
 ) {
     val model = remember(lat, lon, ele) { Track3D.buildModel(lat, lon, ele) } ?: return
     val colors = remember(colorValues, ramp) {
@@ -55,23 +59,40 @@ fun Track3DView(
 
     var yaw by remember { mutableStateOf(-0.65) }
     var pitch by remember { mutableStateOf(0.55) }
+    var zoom by remember { mutableStateOf(1f) }
 
     Canvas(
         modifier
             .fillMaxWidth()
             .height(height)
             .pointerInput(Unit) {
-                detectDragGestures { change, drag ->
-                    change.consume()
-                    yaw += drag.x * 0.008
-                    pitch = (pitch + drag.y * 0.008).coerceIn(0.08, 1.45)
+                // One-finger drag arrives as pan (orbit), two-finger pinch as zoom.
+                detectTransformGestures { _, pan, gestureZoom, _ ->
+                    yaw += pan.x * 0.008
+                    pitch = (pitch + pan.y * 0.008).coerceIn(0.08, 1.45)
+                    zoom = (zoom * gestureZoom).coerceIn(0.5f, 4f)
+                }
+            }
+            .pointerInput(Unit) {
+                // Desktop/web mouse wheel.
+                awaitPointerEventScope {
+                    while (true) {
+                        val e = awaitPointerEvent()
+                        if (e.type == PointerEventType.Scroll) {
+                            val delta = e.changes.fold(0f) { acc, ch -> acc + ch.scrollDelta.y }
+                            if (delta != 0f) {
+                                zoom = (zoom * (1f - delta * 0.1f)).coerceIn(0.5f, 4f)
+                                e.changes.forEach { it.consume() }
+                            }
+                        }
+                    }
                 }
             },
     ) {
         val n = model.xs.size
         val cx = size.width / 2f
         val cy = size.height / 2f
-        val scalePx = min(size.width, size.height) * 0.92f
+        val scalePx = min(size.width, size.height) * 0.92f * zoom
         fun px(p: FloatArray, i: Int) = Offset(cx + p[i * 2] * scalePx, cy + p[i * 2 + 1] * scalePx)
 
         val gridP = Track3D.projectAll(grid.first, grid.second, grid.third, yaw, pitch)
@@ -92,6 +113,16 @@ fun Track3DView(
         }
         for (i in 0 until n - 1) {
             drawLine(colors[i], px(lineP, i), px(lineP, i + 1), 2.8f, cap = StrokeCap.Round)
+        }
+
+        // Shared chart cursor: mark the moment on the route (point, plumb line, floor echo).
+        if (cursorIndex != null && cursorIndex in 0 until n) {
+            val pt = px(lineP, cursorIndex)
+            val sh = px(shadowP, cursorIndex)
+            drawLine(Palette.OnBase.copy(alpha = 0.45f), pt, sh, 1.5f)
+            drawCircle(Palette.OnBase.copy(alpha = 0.35f), radius = 4f, center = sh)
+            drawCircle(Palette.OnBase, radius = 7.5f, center = pt)
+            drawCircle(colors[cursorIndex], radius = 4.5f, center = pt)
         }
     }
 }

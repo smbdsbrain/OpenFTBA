@@ -47,6 +47,7 @@ import io.openftba.ui.charts.AxisSpec
 import io.openftba.ui.charts.ChartSpan
 import io.openftba.ui.charts.InteractiveLineChart
 import io.openftba.ui.charts.LineSeries
+import io.openftba.ui.charts.nearestIndex
 import io.openftba.ui.components.Pill
 import io.openftba.ui.components.SectionHeader
 import io.openftba.ui.components.StatTile
@@ -139,8 +140,8 @@ fun RideDetailScreen(detail: RideDetail, units: UnitSystem, onBack: () -> Unit) 
         if (series.lat.size >= 2) {
             Spacer(Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                SectionHeader(s.track3d)
-                Spacer(Modifier.weight(1f))
+                // weight() caps the header's fillMaxWidth so the chips stay visible.
+                SectionHeader(s.track3d, Modifier.weight(1f))
                 AxisChip(s.chartSpeed, gradient == TrackGradient.SPEED) { gradient = TrackGradient.SPEED }
                 Spacer(Modifier.width(8.dp))
                 if (ride.channels.elevation) {
@@ -151,6 +152,7 @@ fun RideDetailScreen(detail: RideDetail, units: UnitSystem, onBack: () -> Unit) 
                 lat = series.lat, lon = series.lon, ele = series.elevation,
                 colorValues = if (gradient == TrackGradient.SPEED) series.speedKmh else series.elevation,
                 ramp = TrackRamps.forGradient(gradient),
+                cursorIndex = cursorX?.let { c -> nearestIndex(xs, c) },
             )
             Text(s.track3dHint, style = MaterialTheme.typography.labelSmall, color = Palette.OnMuted)
         }
