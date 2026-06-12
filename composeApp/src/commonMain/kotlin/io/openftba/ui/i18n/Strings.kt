@@ -53,6 +53,9 @@ interface Strings {
     val noData: String
     val noRidesTitle: String
     val noRidesHint: String
+    val back: String
+    val loadingRide: String
+    val rideNotFound: String
 
     // Ride detail
     val rideSummary: String
@@ -181,6 +184,9 @@ object EnStrings : Strings {
     override val noData = "No data"
     override val noRidesTitle = "No rides yet"
     override val noRidesHint = "Point the watch folder at your OpenTracks export folder in Settings."
+    override val back = "Back"
+    override val loadingRide = "Loading ride…"
+    override val rideNotFound = "Ride not found"
     override val rideSummary = "Summary"
     override val splits = "Splits"
     override val axisTime = "Time"
@@ -323,6 +329,9 @@ object RuStrings : Strings {
     override val noData = "Нет данных"
     override val noRidesTitle = "Пока нет тренировок"
     override val noRidesHint = "Укажите в настройках папку экспорта OpenTracks."
+    override val back = "Назад"
+    override val loadingRide = "Загрузка тренировки…"
+    override val rideNotFound = "Тренировка не найдена"
     override val rideSummary = "Сводка"
     override val splits = "Сплиты"
     override val axisTime = "Время"

@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -33,7 +35,11 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
 @Composable
-fun RideListScreen(state: RepoState, onOpenRide: (String) -> Unit) {
+fun RideListScreen(
+    state: RepoState,
+    listState: LazyListState = rememberLazyListState(),
+    onOpenRide: (String) -> Unit,
+) {
     val s = LocalStrings.current
     if (state.rides.isEmpty()) {
         EmptyState(title = s.noRidesTitle, hint = s.noRidesHint)
@@ -41,6 +47,7 @@ fun RideListScreen(state: RepoState, onOpenRide: (String) -> Unit) {
     }
     LazyColumn(
         Modifier.fillMaxSize().padding(horizontal = 20.dp),
+        state = listState,
         contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 20.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
