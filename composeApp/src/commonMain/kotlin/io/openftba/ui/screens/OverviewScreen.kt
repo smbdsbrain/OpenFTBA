@@ -39,6 +39,8 @@ import io.openftba.ui.format.Format
 import io.openftba.ui.i18n.LocalStrings
 import io.openftba.ui.info.MetricInfoDot
 import io.openftba.ui.info.MetricKey
+import io.openftba.ui.LocalWidthClass
+import io.openftba.ui.WidthClass
 import io.openftba.ui.overview.OverviewStats
 import io.openftba.ui.theme.Dimens
 import io.openftba.ui.theme.Palette
@@ -160,7 +162,8 @@ fun OverviewScreen(state: RepoState) {
 private data class Tile(val label: String, val value: String, val record: Boolean = false, val accent: androidx.compose.ui.graphics.Color = Palette.OnBase, val info: MetricKey? = null)
 
 @Composable
-private fun TileGrid(tiles: List<Tile>, columns: Int = 3) {
+private fun TileGrid(tiles: List<Tile>) {
+    val columns = if (LocalWidthClass.current == WidthClass.Compact) 2 else 3
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         tiles.chunked(columns).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {

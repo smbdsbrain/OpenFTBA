@@ -47,6 +47,8 @@ import io.openftba.ui.charts.AxisSpec
 import io.openftba.ui.charts.ChartSpan
 import io.openftba.ui.charts.InteractiveLineChart
 import io.openftba.ui.charts.LineSeries
+import io.openftba.ui.LocalWidthClass
+import io.openftba.ui.WidthClass
 import io.openftba.ui.charts.nearestIndex
 import io.openftba.ui.components.Pill
 import io.openftba.ui.components.SectionHeader
@@ -232,7 +234,8 @@ private fun AxisChip(label: String, selected: Boolean, onClick: () -> Unit) {
 private data class STile(val label: String, val value: String, val accent: Color = Palette.OnBase, val info: MetricKey? = null)
 
 @Composable
-private fun TileGridLocal(tiles: List<STile>, columns: Int = 3) {
+private fun TileGridLocal(tiles: List<STile>) {
+    val columns = if (LocalWidthClass.current == WidthClass.Compact) 2 else 3
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         tiles.chunked(columns).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
