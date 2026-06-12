@@ -65,8 +65,8 @@ android {
         applicationId = "io.openftba"
         minSdk = libs.versions.androidMinSdk.get().toInt()
         targetSdk = libs.versions.androidTargetSdk.get().toInt()
-        versionCode = 2
-        versionName = "0.2.0"
+        versionCode = 3
+        versionName = "0.3.0"
     }
     // INTERNET is declared only for the user-initiated SRTM tile download (see AndroidManifest);
     // the app is otherwise offline.
@@ -127,7 +127,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Msi, TargetFormat.Deb)
             packageName = "OpenFTBA"
-            packageVersion = "0.2.0"
+            packageVersion = "0.3.0"
             windows { iconFile.set(project.file("src/desktopMain/resources/icon.ico")) }
             linux { iconFile.set(project.file("src/desktopMain/resources/icon.png")) }
             macOS { iconFile.set(project.file("src/desktopMain/resources/icon.icns")) }
