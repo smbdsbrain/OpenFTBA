@@ -4,11 +4,13 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -29,8 +31,9 @@ import io.openftba.ui.theme.Palette
 /**
  * GitHub-style calendar heatmap with hover tooltip (date + that day's distance). Columns are
  * weeks (oldest→newest), rows are weekdays (Mon→Sun). Square cells size themselves from the
- * available width (so the widget fills the row on wide screens) and the component height
- * follows. Month labels run along the top, Mon/Wed/Fri labels down the left.
+ * available width (capped so the grid stays readable) and the component height follows; when
+ * the capped grid is narrower than the row it is centered. Month labels run along the top,
+ * Mon/Wed/Fri labels down the left.
  */
 @Composable
 fun CalendarHeatmap(
@@ -52,10 +55,14 @@ fun CalendarHeatmap(
 
         val cell = ((maxWidth - leftGutter - gap * (cols - 1)) / cols).coerceIn(8.dp, 22.dp)
         val totalHeight = topGutter + cell * rows + gap * (rows - 1)
+        // The cell size is capped, so on wide windows the grid is narrower than the row —
+        // center it instead of leaving it huddled at the left edge.
+        val gridWidth = leftGutter + cell * cols + gap * (cols - 1)
+        val centerPad = ((maxWidth - gridWidth) / 2).coerceAtLeast(0.dp)
         val labelStyle = TextStyle(fontSize = ChartDims.tickFontSp.sp, color = Palette.OnMuted)
 
         Canvas(
-            Modifier.fillMaxWidth().height(totalHeight).pointerInput(cols, cell) {
+            Modifier.align(Alignment.TopCenter).width(gridWidth).height(totalHeight).pointerInput(cols, cell) {
                 val side = cell.toPx()
                 val gapPx = gap.toPx()
                 val leftPx = leftGutter.toPx()
@@ -127,7 +134,8 @@ fun CalendarHeatmap(
                 ChartTooltip(
                     title = cellData.date.toString(),
                     lines = listOf(TipLine("", distanceLabel(cellData.distanceMeters), accent)),
-                    cursorPx = with(density) { (leftGutter + (cell + gap) * c).toPx() },
+                    // The grid is centered, so translate the canvas-local cell x to row coords.
+                    cursorPx = with(density) { (centerPad + leftGutter + (cell + gap) * c).toPx() },
                     widthPx = constraints.maxWidth.toFloat(),
                 )
             }
