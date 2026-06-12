@@ -23,7 +23,10 @@ import kotlinx.serialization.json.Json
 class WasmRideRepository : RideRepository {
 
     private val json = Json { ignoreUnknownKeys = true }
-    private val details = HashMap<String, RideDetail>()
+
+    // Snapshot-backed so a screen waiting on a deep-linked detail recomposes when the
+    // prefetch lands (a plain HashMap would leave it stuck on the loading state).
+    private val details = androidx.compose.runtime.mutableStateMapOf<String, RideDetail>()
     private val _state = MutableStateFlow(RepoState(loading = true))
     override val state: StateFlow<RepoState> = _state.asStateFlow()
 
