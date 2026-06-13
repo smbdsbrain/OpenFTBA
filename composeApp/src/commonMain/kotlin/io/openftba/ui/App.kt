@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.DirectionsBike
 import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRail
@@ -83,38 +84,43 @@ fun App(
     )
 
     val content: @Composable () -> Unit = {
-        val detailId = navState.openRideId
-        when {
-            detailId != null -> {
-                val detail = repo.detail(detailId)
+        Column(Modifier.fillMaxSize()) {
+            AnalyzingBanner(state.analyzing, state.analyzingDone, state.analyzingTotal, strings)
+            Box(Modifier.fillMaxSize().weight(1f)) {
+                val detailId = navState.openRideId
                 when {
-                    detail != null -> RideDetailScreen(
-                        detail = detail,
-                        units = state.settings.units,
-                        onBack = { navState.goBack() },
+                    detailId != null -> {
+                        val detail = repo.detail(detailId)
+                        when {
+                            detail != null -> RideDetailScreen(
+                                detail = detail,
+                                units = state.settings.units,
+                                onBack = { navState.goBack() },
+                            )
+                            // On the web, rides and details arrive async (deep link) —
+                            // keep the route alive instead of silently dropping it.
+                            state.loading || state.rides.any { it.id == detailId } ->
+                                EmptyState(title = strings.loadingRide, hint = "")
+                            else -> EmptyState(title = strings.rideNotFound, hint = "")
+                        }
+                    }
+                    navState.tab == Tab.OVERVIEW -> OverviewScreen(state)
+                    navState.tab == Tab.RIDES -> RideListScreen(
+                        state,
+                        listState = ridesListState,
+                        onOpenRide = { navState.openRide(it) },
                     )
-                    // On the web, rides and details arrive async (deep link) —
-                    // keep the route alive instead of silently dropping it.
-                    state.loading || state.rides.any { it.id == detailId } ->
-                        EmptyState(title = strings.loadingRide, hint = "")
-                    else -> EmptyState(title = strings.rideNotFound, hint = "")
+                    navState.tab == Tab.SETTINGS -> SettingsScreen(
+                        settings = state.settings,
+                        onChange = repo::updateSettings,
+                        onRescan = { },
+                        state = state,
+                        onDownloadDem = { repo.downloadDemTiles() },
+                        onPickFolder = onPickFolder,
+                        onPickDemFolder = onPickDemFolder,
+                    )
                 }
             }
-            navState.tab == Tab.OVERVIEW -> OverviewScreen(state)
-            navState.tab == Tab.RIDES -> RideListScreen(
-                state,
-                listState = ridesListState,
-                onOpenRide = { navState.openRide(it) },
-            )
-            navState.tab == Tab.SETTINGS -> SettingsScreen(
-                settings = state.settings,
-                onChange = repo::updateSettings,
-                onRescan = { },
-                state = state,
-                onDownloadDem = { repo.downloadDemTiles() },
-                onPickFolder = onPickFolder,
-                onPickDemFolder = onPickDemFolder,
-            )
         }
     }
 
@@ -165,3 +171,17 @@ private class NavTabSpec(
     val icon: ImageVector,
     val label: (io.openftba.ui.i18n.Strings) -> String,
 )
+
+/** Thin top strip shown while new (uncached) rides are analyzed in the background. */
+@Composable
+private fun AnalyzingBanner(analyzing: Boolean, done: Int, total: Int, strings: io.openftba.ui.i18n.Strings) {
+    if (!analyzing) return
+    Surface(color = Palette.Accent, modifier = Modifier.fillMaxWidth()) {
+        Text(
+            strings.analyzingRides(done, total),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            color = Palette.Base,
+            style = MaterialTheme.typography.labelMedium,
+        )
+    }
+}
