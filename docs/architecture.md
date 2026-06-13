@@ -22,8 +22,11 @@ shared/                      Kotlin Multiplatform (jvm + wasmJs). The single sou
     settings/     AppSettings.kt            — persisted settings (serializable)
     api/          Dto.kt, Mappers.kt        — the wire contract (DTOs) + domain<->DTO mappers
                                               + buildRideSeries (chart series from a track)
+    cache/        RideCache.kt              — portable per-ride analysis cache: format,
+                                              config fingerprint, invalidation rules
   jvmMain/
     parse/        OpenTracksKmlParser.kt    — KMZ/KML (OpenTracks schema) reader (StAX)
+    cache/        JvmRideCache.kt           — desktop+server disk cache (java.io)
     dem/          SrtmElevationProvider.kt  — local SRTM .hgt/.hgt.gz reader (bilinear)
                   SrtmDownloader.kt         — user-initiated tile download (only network path)
 
@@ -87,6 +90,7 @@ REST endpoints (server):
 - `GET /api/rides` → `List<RideSummaryDto>`
 - `GET /api/rides/{id}` → `RideDetailDto` (summary + downsampled series + splits)
 - `GET /api/overview` → `OverviewDto` (athlete tier + CTL/ATL/TSB load curve)
+- `GET /api/status` → `ScanStatusDto` (scan progress for the "computing N new rides" banner)
 - `GET/POST /api/settings` → `AppConfigDto` (the full `AppSettings` + read-only watch/DEM folder
   paths + `demAvailable`). POST persists the settings, reconfigures the analyzer and rescans in
   place. Folder paths are host-configured, so client changes to them are ignored.
@@ -98,7 +102,18 @@ REST endpoints (server):
 - **No database.** Rides are parsed from the watch folder on each scan and held **in
   memory** (desktop: a map in `DesktopRideRepository`; server: an `AtomicReference<Snapshot>`
   in `RideStore`). The server periodically rescans (`OPENFTBA_RESCAN_SECONDS`, default 60).
-  A SQLite/SQLDelight cache is a possible future optimization but is **not** implemented.
+- **On-disk analysis cache.** To avoid re-parsing and re-analyzing every track on each launch,
+  the analyzed result of each ride (a `RideDetailDto` — metrics + downsampled chart/3D series +
+  splits) is cached as one JSON blob per source file, keyed by file identity (name + size +
+  mtime) + a fingerprint of the `AnalyzerConfig` + a cache version. On scan, unchanged files are
+  restored from the cache and only new/changed files are parsed and analyzed (incrementally,
+  with a UI "computing N new rides" banner driven by `RepoState.analyzing*` / the server's
+  `GET /api/status`). The portable format + invalidation rules live in `shared/.../cache/`
+  (`RideCache.kt`); IO is platform-specific (`JvmRideCache` for desktop+server, `AndroidRideCache`
+  for Android). Cache location: `~/.openftba/cache/` (desktop), `OPENFTBA_CONFIG_DIR/cache/`
+  (server, skipped if unset), app `filesDir/ride-cache/` (Android). Changing the analyzer config
+  invalidates all entries (one full re-analyze); a DEM download clears the cache. **Bump
+  `RIDE_CACHE_VERSION` whenever `RideAnalyzer`/`buildRideSeries` change computed numbers.**
 - **Settings**: desktop persists `AppSettings` as JSON at `~/.openftba/settings.json`; Android
   uses SharedPreferences. The server persists the full `AppSettings` to JSON at
   `OPENFTBA_CONFIG_DIR` (seeded from env on first run), so settings survive restarts and sync

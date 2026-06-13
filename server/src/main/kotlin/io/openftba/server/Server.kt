@@ -66,11 +66,12 @@ fun main() {
         ftpWatts = System.getenv("OPENFTBA_FTP")?.toIntOrNull(),
     )
     // Persisted, cross-device settings. A writable dir (e.g. a Docker volume) makes them
-    // survive restarts; without it, settings are in-memory only.
-    val configFile = System.getenv("OPENFTBA_CONFIG_DIR")?.takeIf { it.isNotBlank() }
-        ?.let { File(it, "settings.json") }
+    // survive restarts; without it, settings are in-memory only. The same dir backs the on-disk
+    // analysis cache so a restart restores unchanged rides without re-parsing them.
+    val configDir = System.getenv("OPENFTBA_CONFIG_DIR")?.takeIf { it.isNotBlank() }?.let { File(it) }
+    val configFile = configDir?.let { File(it, "settings.json") }
 
-    val store = RideStore(File(watchFolder))
+    val store = RideStore(File(watchFolder), cacheDir = configDir?.let { File(it, "cache") })
     val settings = SettingsManager(store, configFile, envSettings, demProvider, demAvailable, watchFolder, demFolder?.path)
     store.setConfig(settings.build())
     val count = store.rescan()
@@ -175,6 +176,7 @@ fun Application.module(store: RideStore, settings: SettingsManager, rescanSecond
             call.respond(settings.current())
         }
         get("/api/overview") { call.respond(store.overview()) }
+        get("/api/status") { call.respond(store.status()) }
         get("/api/rides") { call.respond(store.rides) }
         get("/api/rides/{id}") {
             val id = call.parameters["id"]

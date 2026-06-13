@@ -109,6 +109,10 @@ data class AthleteTierDto(
 @Serializable
 data class LoadPointDto(val epochDay: Long, val ctl: Double, val atl: Double, val tsb: Double)
 
+/** Server scan progress, polled by the web client to show the "computing N new rides" banner. */
+@Serializable
+data class ScanStatusDto(val scanning: Boolean = false, val done: Int = 0, val total: Int = 0)
+
 @Serializable
 data class OverviewDto(
     val athlete: AthleteTierDto,

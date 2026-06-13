@@ -56,6 +56,8 @@ interface Strings {
     val back: String
     val loadingRide: String
     val rideNotFound: String
+    /** Banner shown while new (uncached) rides are being analyzed in the background. */
+    fun analyzingRides(done: Int, total: Int): String
     /** Three-letter month labels, Jan..Dec, for the calendar heatmap. */
     val monthsShort: List<String>
     /** Short weekday labels, Mon..Sun (Monday-first, matching the heatmap rows). */
@@ -192,6 +194,8 @@ object EnStrings : Strings {
     override val back = "Back"
     override val loadingRide = "Loading ride…"
     override val rideNotFound = "Ride not found"
+    override fun analyzingRides(done: Int, total: Int) =
+        if (total > 0) "Analyzing new rides… $done/$total" else "Analyzing new rides…"
     override val monthsShort = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
     override val weekdaysShort = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
     override val rideSummary = "Summary"
@@ -340,6 +344,8 @@ object RuStrings : Strings {
     override val back = "Назад"
     override val loadingRide = "Загрузка тренировки…"
     override val rideNotFound = "Тренировка не найдена"
+    override fun analyzingRides(done: Int, total: Int) =
+        if (total > 0) "Обсчёт новых тренировок… $done/$total" else "Обсчёт новых тренировок…"
     override val monthsShort = listOf("Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек")
     override val weekdaysShort = listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс")
     override val rideSummary = "Сводка"

@@ -22,22 +22,28 @@ import java.util.zip.ZipInputStream
 object AndroidOpenTracksParser {
 
     fun parseTree(context: Context, treeUri: String): List<ParsedTrack> {
+        return trackFiles(context, treeUri).mapNotNull { parseDocument(context, it) }
+    }
+
+    /** The KMZ/KML/GPX documents in the watch tree, used to compute cache keys before parsing. */
+    fun trackFiles(context: Context, treeUri: String): List<DocumentFile> {
         val root = runCatching { DocumentFile.fromTreeUri(context, Uri.parse(treeUri)) }.getOrNull()
             ?: return emptyList()
-        val out = ArrayList<ParsedTrack>()
-        for (file in root.listFiles()) {
-            if (!file.isFile) continue
-            val name = file.name ?: continue
-            val lower = name.lowercase()
-            if (!(lower.endsWith(".kmz") || lower.endsWith(".kml"))) continue
-            runCatching {
-                context.contentResolver.openInputStream(file.uri)?.use { input ->
-                    val track = if (lower.endsWith(".kmz")) parseKmz(input, name) else parseKml(input, name)
-                    if (track != null) out.add(track)
-                }
-            }
+        return root.listFiles().filter { file ->
+            file.isFile && (file.name?.lowercase()?.let { it.endsWith(".kmz") || it.endsWith(".kml") } == true)
         }
-        return out
+    }
+
+    /** Parse a single watch-folder document (called only for cache misses). */
+    fun parseDocument(context: Context, file: DocumentFile): ParsedTrack? {
+        val name = file.name ?: return null
+        val lower = name.lowercase()
+        if (!(lower.endsWith(".kmz") || lower.endsWith(".kml"))) return null
+        return runCatching {
+            context.contentResolver.openInputStream(file.uri)?.use { input ->
+                if (lower.endsWith(".kmz")) parseKmz(input, name) else parseKml(input, name)
+            }
+        }.getOrNull()
     }
 
     private fun parseKmz(input: InputStream, sourceName: String): ParsedTrack? {

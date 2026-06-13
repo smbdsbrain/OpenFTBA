@@ -3,10 +3,15 @@ package io.openftba.data
 import io.openftba.api.AppConfigDto
 import io.openftba.api.RideDetailDto
 import io.openftba.api.RideSummaryDto
+import io.openftba.api.ScanStatusDto
 import io.openftba.api.toRide
 import io.openftba.settings.AppSettings
 import kotlinx.browser.window
 import org.w3c.fetch.RequestInit
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,7 +35,36 @@ class WasmRideRepository : RideRepository {
     private val _state = MutableStateFlow(RepoState(loading = true))
     override val state: StateFlow<RepoState> = _state.asStateFlow()
 
-    init { loadSettings(); load() }
+    /** True between observing a server scan start and its completion, so we reload rides once. */
+    private var wasScanning = false
+
+    @OptIn(DelicateCoroutinesApi::class)
+    private fun startStatusPolling() {
+        GlobalScope.launch {
+            while (true) {
+                delay(4000)
+                pollStatus()
+            }
+        }
+    }
+
+    /** Reflect the server's scan progress as the "computing N new rides" banner; reload when done. */
+    private fun pollStatus() {
+        window.fetch("/api/status").then { resp ->
+            resp.text().then { body ->
+                val s = runCatching { json.decodeFromString(ScanStatusDto.serializer(), body.toString()) }.getOrNull()
+                if (s != null) {
+                    _state.update { it.copy(analyzing = s.scanning, analyzingDone = s.done, analyzingTotal = s.total) }
+                    if (wasScanning && !s.scanning) load() // server finished analyzing → refresh rides
+                    wasScanning = s.scanning
+                }
+                null
+            }
+            null
+        }.catch { null } // status polling is best-effort; never surface as an error
+    }
+
+    init { loadSettings(); load(); startStatusPolling() }
 
     override fun updateSettings(settings: AppSettings) {
         // Optimistic local update (snappy locale/units switch), then persist on the server so
